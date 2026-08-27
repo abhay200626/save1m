@@ -12,7 +12,6 @@
     :root {
       --bg-dark: #070a12;
       --card-bg: rgba(19, 25, 41, 0.75);
-      --card-inner: #0f1526;
       --accent-gradient: linear-gradient(135deg, #a855f7 0%, #ec4899 50%, #06b6d4 100%);
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
@@ -20,12 +19,7 @@
       --border-hover: rgba(168, 85, 247, 0.4);
     }
 
-    * { 
-      box-sizing: border-box; 
-      margin: 0; 
-      padding: 0; 
-      font-family: 'Plus Jakarta Sans', sans-serif; 
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
 
     body { 
       background-color: var(--bg-dark); 
@@ -55,12 +49,12 @@
     header { 
       width: 100%; 
       max-width: 1200px; 
-      padding: 20px 20px; 
+      padding: 20px; 
       display: flex; 
       justify-content: space-between; 
       align-items: center; 
       position: relative; 
-      z-index: 1; 
+      z-index: 10; 
       flex-wrap: wrap;
       gap: 16px;
     }
@@ -86,11 +80,7 @@
       box-shadow: 0 0 15px rgba(168, 85, 247, 0.3);
     }
 
-    .brand-text {
-      display: flex;
-      flex-direction: column;
-      line-height: 1;
-    }
+    .brand-text { display: flex; flex-direction: column; line-height: 1; }
 
     .brand-title {
       font-family: 'Space Grotesk', sans-serif;
@@ -98,16 +88,12 @@
       font-weight: 800;
       letter-spacing: 0.5px;
       color: #ffffff;
-      display: flex;
-      align-items: center;
-      gap: 2px;
     }
 
     .brand-title .highlight {
       background: linear-gradient(135deg, #c084fc 0%, #f472b6 60%, #38bdf8 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      font-weight: 900;
     }
 
     .brand-tag {
@@ -121,7 +107,7 @@
 
     .nav-tabs { 
       display: flex; 
-      gap: 4px; 
+      gap: 6px; 
       background: rgba(255, 255, 255, 0.05); 
       padding: 4px; 
       border-radius: 30px; 
@@ -133,15 +119,16 @@
       background: transparent; 
       border: none; 
       color: var(--text-muted); 
-      padding: 7px 14px; 
+      padding: 8px 16px; 
       border-radius: 20px; 
       font-size: 0.85rem; 
       font-weight: 600; 
       cursor: pointer; 
-      display: flex; 
+      display: inline-flex; 
       align-items: center; 
       gap: 6px; 
       transition: all 0.25s ease; 
+      touch-action: manipulation;
     }
 
     .tab-btn:hover { color: #fff; }
@@ -155,9 +142,9 @@
       width: 100%; 
       max-width: 850px; 
       text-align: center; 
-      padding: 24px 16px 20px; 
+      padding: 20px 16px; 
       position: relative; 
-      z-index: 1; 
+      z-index: 5; 
       display: flex; 
       flex-direction: column; 
       align-items: center; 
@@ -181,10 +168,7 @@
       padding: 0 10px;
     }
 
-    .subtitle span { 
-      color: #c4b5fd; 
-      font-weight: 500; 
-    }
+    .subtitle span { color: #c4b5fd; font-weight: 500; }
 
     .search-container { 
       width: 100%; 
@@ -198,7 +182,7 @@
       gap: 10px; 
       box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); 
       backdrop-filter: blur(12px); 
-      transition: border-color 0.3s, box-shadow 0.3s; 
+      transition: border-color 0.3s; 
     }
 
     .search-container:focus-within { 
@@ -229,19 +213,17 @@
       font-weight: 600; 
       font-size: 0.9rem; 
       cursor: pointer; 
-      display: flex; 
+      display: inline-flex; 
       align-items: center; 
       gap: 6px; 
       flex-shrink: 0;
-      transition: transform 0.2s; 
+      touch-action: manipulation;
     }
 
-    .action-btn:active { transform: scale(0.96); }
-    
     .spinner { 
       display: none; 
-      width: 28px; 
-      height: 28px; 
+      width: 32px; 
+      height: 32px; 
       border: 3px solid rgba(255, 255, 255, 0.1); 
       border-radius: 50%; 
       border-top-color: #8b5cf6; 
@@ -261,13 +243,6 @@
       color: #f3e8ff;
       font-size: 0.85rem;
       font-weight: 600;
-      box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
-      animation: bouncePulse 2s infinite ease-in-out;
-    }
-
-    @keyframes bouncePulse {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-4px); }
     }
 
     .results-grid {
@@ -285,17 +260,11 @@
       border-radius: 18px;
       padding: 16px;
       text-align: center;
-      animation: fadeIn 0.4s ease-out forwards;
       display: flex;
       flex-direction: column;
       width: 100%;
       max-width: 420px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
     }
 
     .result-card img {
@@ -308,7 +277,6 @@
       background: #1a2035;
     }
 
-    /* Quality Selector Styles */
     .quality-wrapper {
       margin-bottom: 12px;
       display: flex;
@@ -324,9 +292,6 @@
       font-size: 0.82rem;
       font-weight: 600;
       color: #c4b5fd;
-      display: flex;
-      align-items: center;
-      gap: 5px;
     }
 
     .quality-select {
@@ -338,7 +303,6 @@
       border-radius: 8px;
       padding: 4px 8px;
       outline: none;
-      cursor: pointer;
     }
 
     .dl-final-btn {
@@ -354,10 +318,19 @@
       transition: background 0.2s;
     }
 
-    .dl-final-btn:active { background: #059669; }
+    .dl-final-btn:hover { background: #059669; }
 
-    .error-msg { color: #ef4444; font-size: 0.88rem; margin-top: 15px; padding: 0 10px; }
+    .error-msg { 
+      color: #f87171; 
+      font-size: 0.9rem; 
+      margin-top: 15px; 
+      padding: 10px 16px; 
+      background: rgba(239, 68, 68, 0.1); 
+      border-radius: 8px; 
+      display: none;
+    }
 
+    /* Content Sections */
     .content-section {
       width: 100%;
       max-width: 1080px;
@@ -367,20 +340,8 @@
       z-index: 1;
     }
 
-    .steps-title { 
-      font-size: 1.5rem; 
-      font-weight: 700; 
-      color: #fff; 
-      text-align: center;
-      margin-bottom: 6px; 
-    }
-
-    .steps-desc { 
-      color: var(--text-muted); 
-      font-size: 0.9rem; 
-      text-align: center;
-      margin-bottom: 30px; 
-    }
+    .steps-title { font-size: 1.5rem; font-weight: 700; color: #fff; text-align: center; margin-bottom: 6px; }
+    .steps-desc { color: var(--text-muted); font-size: 0.9rem; text-align: center; margin-bottom: 30px; }
 
     .steps-container { 
       position: relative; 
@@ -390,20 +351,7 @@
       gap: 16px;
     }
 
-    .steps-container::before { 
-      content: ''; 
-      position: absolute; 
-      top: 22px; 
-      left: 15%; 
-      right: 15%; 
-      height: 2px; 
-      background: linear-gradient(90deg, rgba(139, 92, 246, 0.4), rgba(236, 72, 153, 0.4)); 
-      z-index: 0; 
-    }
-
     .step-item { 
-      position: relative; 
-      z-index: 1; 
       display: flex; 
       flex-direction: column; 
       align-items: center; 
@@ -426,11 +374,7 @@
       margin-bottom: 12px; 
     }
 
-    .step-text { 
-      color: #d1d5db; 
-      font-size: 0.85rem; 
-      line-height: 1.4;
-    }
+    .step-text { color: #d1d5db; font-size: 0.85rem; line-height: 1.4; }
 
     .showcase-card {
       background: var(--card-bg);
@@ -443,44 +387,12 @@
       align-items: center;
     }
 
-    .showcase-text h2 {
-      font-size: 1.5rem;
-      font-weight: 800;
-      color: #fff;
-      margin-bottom: 12px;
-    }
+    .showcase-text h2 { font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 12px; }
+    .showcase-text p { color: var(--text-muted); line-height: 1.55; font-size: 0.9rem; margin-bottom: 18px; }
 
-    .showcase-text p {
-      color: var(--text-muted);
-      line-height: 1.55;
-      font-size: 0.9rem;
-      margin-bottom: 18px;
-    }
-
-    .feature-points {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      margin-bottom: 18px;
-    }
-
-    .point-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      font-size: 0.85rem;
-      color: #e5e7eb;
-      line-height: 1.4;
-    }
-
-    .point-icon {
-      background: rgba(139, 92, 246, 0.2);
-      color: #a78bfa;
-      border-radius: 50%;
-      padding: 3px;
-      flex-shrink: 0;
-      margin-top: 2px;
-    }
+    .feature-points { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+    .point-item { display: flex; align-items: flex-start; gap: 8px; font-size: 0.85rem; color: #e5e7eb; }
+    .point-icon { background: rgba(139, 92, 246, 0.2); color: #a78bfa; border-radius: 50%; padding: 3px; flex-shrink: 0; }
 
     .phone-mockup-wrapper {
       width: 100%;
@@ -492,206 +404,20 @@
       margin: 0 auto;
     }
 
-    .phone-mockup-wrapper img {
-      width: 100%;
-      height: 280px;
-      object-fit: cover;
-      display: block;
-    }
+    .phone-mockup-wrapper img { width: 100%; height: 280px; object-fit: cover; display: block; }
+    .phone-caption { margin-top: 10px; font-size: 0.82rem; color: #cbd5e1; text-align: center; }
 
-    .phone-caption {
-      margin-top: 10px;
-      font-size: 0.82rem;
-      color: #cbd5e1;
-      text-align: center;
-    }
+    .dual-cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .info-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 18px; padding: 18px; }
+    .info-card h3 { font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 10px; }
+    .info-card p { color: var(--text-muted); font-size: 0.88rem; line-height: 1.55; }
 
-    .dual-cards-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 18px;
-    }
-
-    .info-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 18px;
-      padding: 18px;
-    }
-
-    .card-banner {
-      width: 100%;
-      height: 140px;
-      border-radius: 14px;
-      overflow: hidden;
-      margin-bottom: 16px;
-      background: #0d1224;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .art-rocket-bg {
-      background: radial-gradient(circle at 50% 50%, rgba(168, 85, 247, 0.35) 0%, rgba(236, 72, 153, 0.15) 50%, #0d1224 85%);
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .art-format-bg {
-      background: radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.3) 0%, rgba(139, 92, 246, 0.15) 50%, #0d1224 85%);
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .floating-glass-box {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 14px;
-      padding: 10px 14px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .format-pill {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 10px;
-      padding: 6px 10px;
-      font-size: 0.75rem;
-      font-weight: 800;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3px;
-    }
-
-    .info-card h3 {
-      font-size: 1.15rem;
-      font-weight: 700;
-      color: #fff;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .info-card h3 span.dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #8b5cf6;
-      display: inline-block;
-    }
-
-    .info-card p {
-      color: var(--text-muted);
-      font-size: 0.88rem;
-      line-height: 1.55;
-    }
-
-    .why-banner {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 18px;
-      padding: 24px 16px;
-      text-align: center;
-    }
-
-    .why-banner h2 {
-      font-size: 1.45rem;
-      font-weight: 700;
-      color: #fff;
-      margin-bottom: 10px;
-    }
-
-    .why-banner p.main-desc {
-      color: var(--text-muted);
-      font-size: 0.88rem;
-      margin-bottom: 16px;
-      line-height: 1.55;
-    }
-
-    .note-box {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-size: 0.82rem;
-      color: #cbd5e1;
-    }
-
-    .faq-title {
-      font-size: 1.6rem;
-      font-weight: 800;
-      text-align: center;
-      color: #fff;
-      margin-bottom: 6px;
-    }
-
-    .faq-sub {
-      color: var(--text-muted);
-      font-size: 0.88rem;
-      text-align: center;
-      margin-bottom: 25px;
-    }
-
-    .faq-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
-
-    .faq-item {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 14px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .faq-header {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-    }
-
-    .faq-badge {
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      background: rgba(139, 92, 246, 0.2);
-      color: #c4b5fd;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.78rem;
-      font-weight: 700;
-      flex-shrink: 0;
-      margin-top: 2px;
-    }
-
-    .faq-item h4 {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: #fff;
-      line-height: 1.35;
-    }
-
-    .faq-item p {
-      color: var(--text-muted);
-      font-size: 0.85rem;
-      line-height: 1.5;
-      padding-left: 30px;
-    }
+    .faq-title { font-size: 1.6rem; font-weight: 800; text-align: center; color: #fff; margin-bottom: 6px; }
+    .faq-sub { color: var(--text-muted); font-size: 0.88rem; text-align: center; margin-bottom: 25px; }
+    .faq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .faq-item { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 14px; padding: 16px; }
+    .faq-item h4 { font-size: 0.95rem; font-weight: 600; color: #fff; margin-bottom: 6px; }
+    .faq-item p { color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; }
 
     footer {
       width: 100%;
@@ -713,33 +439,10 @@
       border-bottom: 1px solid var(--border-color);
     }
 
-    .footer-brand p {
-      color: var(--text-muted);
-      font-size: 0.85rem;
-      line-height: 1.5;
-      margin-top: 10px;
-    }
-
-    .footer-col h5 {
-      color: #fff;
-      font-size: 0.88rem;
-      font-weight: 700;
-      margin-bottom: 12px;
-      letter-spacing: 0.5px;
-    }
-
-    .footer-col ul {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .footer-col ul li a {
-      color: var(--text-muted);
-      text-decoration: none;
-      font-size: 0.82rem;
-    }
+    .footer-brand p { color: var(--text-muted); font-size: 0.85rem; margin-top: 10px; }
+    .footer-col h5 { color: #fff; font-size: 0.88rem; font-weight: 700; margin-bottom: 12px; }
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .footer-col ul li a { color: var(--text-muted); text-decoration: none; font-size: 0.82rem; cursor: pointer; }
 
     .footer-bottom {
       max-width: 1100px;
@@ -749,99 +452,24 @@
       gap: 10px;
       font-size: 0.78rem;
       color: #64748b;
-      line-height: 1.5;
     }
 
-    .footer-copy {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 6px;
-    }
-
-    .engineer-credit {
-      color: #94a3b8;
-      font-weight: 500;
-    }
-
-    .engineer-credit span {
-      color: #f472b6;
-      font-weight: 700;
-    }
+    .footer-copy { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+    .engineer-credit span { color: #f472b6; font-weight: 700; }
 
     @media (max-width: 768px) {
-      header {
-        flex-direction: column;
-        align-items: center;
-        padding: 16px 12px;
-      }
-
-      .nav-tabs {
-        width: 100%;
-        justify-content: center;
-      }
-
-      .tab-btn {
-        flex: 1;
-        justify-content: center;
-        padding: 8px 10px;
-        font-size: 0.8rem;
-      }
-
+      header { flex-direction: column; align-items: center; padding: 16px 12px; }
+      .nav-tabs { width: 100%; justify-content: center; }
+      .tab-btn { flex: 1; justify-content: center; padding: 8px 10px; font-size: 0.8rem; }
       h1 { font-size: 1.65rem; }
-      .subtitle { font-size: 0.85rem; margin-bottom: 20px; }
-
-      .search-container {
-        padding: 5px 6px 5px 14px;
-      }
-
-      .action-btn {
-        padding: 8px 16px;
-        font-size: 0.85rem;
-      }
-
-      .steps-container {
-        flex-direction: column;
-        align-items: center;
-        gap: 20px;
-      }
-
-      .steps-container::before { display: none; }
-      .step-item { width: 100%; }
-
-      .showcase-card {
-        grid-template-columns: 1fr;
-        text-align: center;
-        padding: 20px 14px;
-      }
-
-      .feature-points {
-        grid-template-columns: 1fr;
-        text-align: left;
-      }
-
-      .dual-cards-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .faq-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .footer-inner {
-        grid-template-columns: 1fr 1fr;
-        gap: 24px;
-      }
-
-      .footer-brand {
-        grid-column: span 2;
-      }
-
-      .footer-copy {
-        flex-direction: column;
-        gap: 8px;
-        text-align: center;
-      }
+      .steps-container { flex-direction: column; }
+      .showcase-card { grid-template-columns: 1fr; }
+      .feature-points { grid-template-columns: 1fr; }
+      .dual-cards-grid { grid-template-columns: 1fr; }
+      .faq-grid { grid-template-columns: 1fr; }
+      .footer-inner { grid-template-columns: 1fr 1fr; }
+      .footer-brand { grid-column: span 2; }
+      .footer-copy { flex-direction: column; gap: 8px; text-align: center; }
     }
   </style>
 </head>
@@ -850,10 +478,8 @@
   <div class="glow-sphere"></div>
 
   <header>
-    <div class="brand-logo">
-      <div class="brand-icon">
-        <i data-lucide="zap" size="18" style="color: #f472b6;"></i>
-      </div>
+    <div class="brand-logo" onclick="selectTab('video')">
+      <div class="brand-icon"><i data-lucide="zap" size="18" style="color: #f472b6;"></i></div>
       <div class="brand-text">
         <div class="brand-title">SAVE<span class="highlight">1M</span></div>
         <div class="brand-tag">ULTRA HD ENGINE</div>
@@ -861,9 +487,9 @@
     </div>
 
     <nav class="nav-tabs">
-      <button class="tab-btn active" onclick="switchTab('video', this)"><i data-lucide="video" size="15"></i> Video</button>
-      <button class="tab-btn" onclick="switchTab('audio', this)"><i data-lucide="music" size="15"></i> Audio</button>
-      <button class="tab-btn" onclick="switchTab('photo', this)"><i data-lucide="image" size="15"></i> Photo</button>
+      <button class="tab-btn active" id="tab-video" onclick="selectTab('video')"><i data-lucide="video" size="15"></i> Video</button>
+      <button class="tab-btn" id="tab-audio" onclick="selectTab('audio')"><i data-lucide="music" size="15"></i> Audio</button>
+      <button class="tab-btn" id="tab-photo" onclick="selectTab('photo')"><i data-lucide="image" size="15"></i> Photo</button>
     </nav>
   </header>
 
@@ -876,8 +502,8 @@
 
     <div class="search-container">
       <i data-lucide="link" class="search-icon" size="18"></i>
-      <input type="text" id="instaUrl" class="search-input" placeholder="Paste Link Here..." />
-      <button class="action-btn" id="mainBtn" onclick="handleButtonClick()">
+      <input type="url" id="instaUrl" class="search-input" placeholder="Paste Instagram Link Here..." autocomplete="off" />
+      <button class="action-btn" id="mainBtn" onclick="handleActionClick()">
         <i data-lucide="clipboard" size="15" id="btnIcon"></i>
         <span id="btnText">Paste</span>
       </button>
@@ -894,9 +520,9 @@
     <h2 class="steps-title" id="stepsTitle">Steps to Download Reels From Instagram</h2>
     <p class="steps-desc">Here’s a quick and easy way to do it:</p>
     <div class="steps-container">
-      <div class="step-item"><div class="step-number">1</div><div class="step-text">Copy Link of the video.</div></div>
-      <div class="step-item"><div class="step-number">2</div><div class="step-text">Paste Link into Input box.</div></div>
-      <div class="step-item"><div class="step-number">3</div><div class="step-text">Select Quality & Download.</div></div>
+      <div class="step-item"><div class="step-number">1</div><div class="step-text">Copy Link from Instagram.</div></div>
+      <div class="step-item"><div class="step-number">2</div><div class="step-text">Paste Link into the box.</div></div>
+      <div class="step-item"><div class="step-number">3</div><div class="step-text">Choose Quality & Download.</div></div>
     </div>
   </section>
 
@@ -904,144 +530,56 @@
     <div class="showcase-card">
       <div class="showcase-text">
         <h2>How Instagram Downloader Works?</h2>
-        <p>An Instagram reels downloader is a tool that allows you to download Reels, Videos, and Photos from Instagram without watermark by simply pasting the link.</p>
-        
+        <p>Save1M allows you to extract and download Reels, Videos, and Photos directly to your gallery in highest available resolution.</p>
         <div class="feature-points">
-          <div class="point-item">
-            <i data-lucide="check" size="13" class="point-icon"></i>
-            <span><strong>Original quality without watermark</strong> with selectable resolutions (1080p, 720p).</span>
-          </div>
-          <div class="point-item">
-            <i data-lucide="check" size="13" class="point-icon"></i>
-            <span><strong>Download in gallery</strong> on iPhone, Android, or PC.</span>
-          </div>
-          <div class="point-item">
-            <i data-lucide="check" size="13" class="point-icon"></i>
-            <span><strong>No installation needed</strong>, runs directly in browser.</span>
-          </div>
-          <div class="point-item">
-            <i data-lucide="check" size="13" class="point-icon"></i>
-            <span><strong>100% Free</strong> lifetime unlimited access.</span>
-          </div>
+          <div class="point-item"><i data-lucide="check" size="13" class="point-icon"></i><span><strong>No Watermark</strong> or logo.</span></div>
+          <div class="point-item"><i data-lucide="check" size="13" class="point-icon"></i><span><strong>Direct Gallery Save</strong> on mobile and PC.</span></div>
+          <div class="point-item"><i data-lucide="check" size="13" class="point-icon"></i><span><strong>100% Free</strong> lifetime access.</span></div>
+          <div class="point-item"><i data-lucide="check" size="13" class="point-icon"></i><span><strong>Multi-Format:</strong> MP4, MP3 & JPG.</span></div>
         </div>
-
-        <p style="font-size: 0.82rem; color: #94a3b8;">No passwords or accounts required. Safe, fast, and encrypted downloads.</p>
       </div>
-
       <div class="showcase-visual">
         <div class="phone-mockup-wrapper">
           <img src="https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?q=80&w=800&auto=format&fit=crop" alt="Instagram Preview" />
         </div>
-        <div class="phone-caption">Save reels instantly with selectable quality</div>
+        <div class="phone-caption">Instant downloads in HD</div>
       </div>
     </div>
   </section>
 
   <section class="content-section">
-    <div class="dual-cards-grid">
-      <div class="info-card">
-        <div class="card-banner">
-          <div class="art-rocket-bg">
-            <div class="floating-glass-box">
-              <i data-lucide="rocket" size="36" style="color: #f472b6;"></i>
-              <div>
-                <div style="font-size: 0.82rem; font-weight: 800; color: #fff;">HYPER FAST</div>
-                <div style="font-size: 0.72rem; color: #c084fc;">Instant Stream</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <h3><span class="dot"></span> Reels Downloader</h3>
-        <p>Download Instagram reels video fast and free directly to your gallery with crisp clarity.</p>
-      </div>
-
-      <div class="info-card">
-        <div class="card-banner">
-          <div class="art-format-bg">
-            <div style="display: flex; gap: 10px; align-items: center;">
-              <div class="format-pill" style="color: #38bdf8;"><i data-lucide="video" size="18"></i><span>MP4</span></div>
-              <div class="format-pill" style="color: #ec4899; background: rgba(236,72,153,0.15);"><i data-lucide="camera" size="18"></i><span>JPG</span></div>
-              <div class="format-pill" style="color: #a855f7;"><i data-lucide="music" size="18"></i><span>MP3</span></div>
-            </div>
-          </div>
-        </div>
-        <h3><span class="dot" style="background:#ec4899;"></span> All Formats</h3>
-        <p>Save1M helps you fetch original quality <strong>MP4</strong>, <strong>JPG</strong>, or <strong>MP3</strong> audio files easily.</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="content-section">
-    <div class="why-banner">
-      <h2>Why use Save1M?</h2>
-      <p class="main-desc">Instagram doesn't allow direct reel downloads. <strong>Save1M</strong> enables quick, lossless downloads on any screen size.</p>
-      <div class="note-box">
-        <strong>Note:</strong> Downloaded media is for personal use only.
-      </div>
-    </div>
-  </section>
-
-  <section class="content-section">
-    <h2 class="faq-title">Frequently Asked Questions</h2>
-    <p class="faq-sub">Common questions about Save1M</p>
-
     <div class="faq-grid">
-      <div class="faq-item">
-        <div class="faq-header"><div class="faq-badge">?</div><h4>Is Save1M free to use?</h4></div>
-        <p>Yes, 100% free with unlimited downloads.</p>
-      </div>
-
-      <div class="faq-item">
-        <div class="faq-header"><div class="faq-badge">?</div><h4>Can I choose video quality?</h4></div>
-        <p>Yes, you can choose between 1080p Ultra HD, 720p HD, and 480p SD before downloading.</p>
-      </div>
-
-      <div class="faq-item">
-        <div class="faq-header"><div class="faq-badge">?</div><h4>What is the max resolution?</h4></div>
-        <p>Original source resolution up to 1080p Full HD and 4K.</p>
-      </div>
-
-      <div class="faq-item">
-        <div class="faq-header"><div class="faq-badge">?</div><h4>Does it work on iPhone & Android?</h4></div>
-        <p>Yes, fully optimized for both mobile and desktop platforms.</p>
-      </div>
+      <div class="faq-item"><h4>Is Save1M free to use?</h4><p>Yes, completely free with unlimited downloads.</p></div>
+      <div class="faq-item"><h4>Can I choose video quality?</h4><p>Yes, choose between 1080p, 720p, or 480p SD before downloading.</p></div>
     </div>
   </section>
 
   <footer>
     <div class="footer-inner">
       <div class="footer-brand">
-        <div class="brand-logo">
+        <div class="brand-logo" onclick="selectTab('video')">
           <div class="brand-icon"><i data-lucide="zap" size="16" style="color: #f472b6;"></i></div>
           <div class="brand-text">
             <div class="brand-title" style="font-size: 1.15rem;">SAVE<span class="highlight">1M</span></div>
             <div class="brand-tag">ULTRA HD ENGINE</div>
           </div>
         </div>
-        <p>Super-fast Instagram reels, photos, and audio engine.</p>
+        <p>Fastest tool to download Instagram reels, photos & audio.</p>
       </div>
 
       <div class="footer-col">
         <h5>TOOLS</h5>
         <ul>
-          <li><a href="#" onclick="switchTab('video', document.querySelectorAll('.tab-btn')[0])">Reels Downloader</a></li>
-          <li><a href="#" onclick="switchTab('photo', document.querySelectorAll('.tab-btn')[2])">Photo Downloader</a></li>
-          <li><a href="#" onclick="switchTab('audio', document.querySelectorAll('.tab-btn')[1])">Audio Downloader</a></li>
-        </ul>
-      </div>
-
-      <div class="footer-col">
-        <h5>LEGAL</h5>
-        <ul>
-          <li><a href="#">Privacy Policy</a></li>
-          <li><a href="#">Terms of Service</a></li>
+          <li><a onclick="selectTab('video')">Reels Downloader</a></li>
+          <li><a onclick="selectTab('photo')">Photo Downloader</a></li>
+          <li><a onclick="selectTab('audio')">Audio Downloader</a></li>
         </ul>
       </div>
 
       <div class="footer-col">
         <h5>SUPPORT</h5>
         <ul>
-          <li><a href="mailto:abhaykumarverma1425@gmail.com"><i data-lucide="mail" size="13" style="vertical-align: middle;"></i> Contact</a></li>
+          <li><a href="mailto:abhaykumarverma1425@gmail.com">Contact Us</a></li>
         </ul>
       </div>
     </div>
@@ -1057,6 +595,7 @@
 
   <script>
     lucide.createIcons();
+
     let currentMode = 'video';
     const input = document.getElementById('instaUrl');
     const btnText = document.getElementById('btnText');
@@ -1066,25 +605,13 @@
     const errorText = document.getElementById('errorText');
     const multiNotice = document.getElementById('multiNotice');
 
-    function smoothScrollTo(targetY, duration = 1500) {
-      const startY = window.pageYOffset;
-      const diff = targetY - startY;
-      let startTime = null;
-
-      function step(currentTime) {
-        if (!startTime) startTime = currentTime;
-        const progress = Math.min((currentTime - startTime) / duration, 1);
-        const ease = progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
-        window.scrollTo(0, startY + diff * ease);
-        if (progress < 1) requestAnimationFrame(step);
-      }
-      requestAnimationFrame(step);
-    }
-
-    function switchTab(mode, element) {
+    // Robust tab switcher
+    function selectTab(mode) {
       currentMode = mode;
+      
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      element.classList.add('active');
+      const activeBtn = document.getElementById(`tab-${mode}`);
+      if (activeBtn) activeBtn.classList.add('active');
 
       const title = document.getElementById('headingTitle');
       const desc = document.getElementById('headingDesc');
@@ -1108,9 +635,129 @@
     }
 
     input.addEventListener('input', () => {
-      btnText.innerText = input.value.trim() ? "Download" : "Paste";
-      btnIcon.setAttribute('data-lucide', input.value.trim() ? 'download' : 'clipboard');
+      const val = input.value.trim();
+      btnText.innerText = val ? "Download" : "Paste";
+      btnIcon.setAttribute('data-lucide', val ? 'download' : 'clipboard');
       lucide.createIcons();
     });
 
-    async
+    // Mobile-safe button handler
+    async function handleActionClick() {
+      const val = input.value.trim();
+
+      if (!val) {
+        // Try clipboard
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          try {
+            const clipText = await navigator.clipboard.readText();
+            if (clipText && clipText.includes('instagram.com')) {
+              input.value = clipText;
+              btnText.innerText = "Download";
+              btnIcon.setAttribute('data-lucide', 'download');
+              lucide.createIcons();
+              fetchMedia(clipText);
+              return;
+            }
+          } catch (e) {
+            console.log('Clipboard permission not granted');
+          }
+        }
+        input.focus();
+      } else {
+        fetchMedia(val);
+      }
+    }
+
+    function updateDownloadQuality(cardId, rawUrl, countLabel) {
+      const select = document.getElementById(`quality-sel-${cardId}`);
+      const btn = document.getElementById(`dl-btn-${cardId}`);
+      const quality = select.value;
+      
+      const fileName = `save1m_reels_${quality}${countLabel ? '_' + countLabel.replace('#', '') : ''}.mp4`;
+      btn.href = `https://save1m.onrender.com/proxy-download?url=${encodeURIComponent(rawUrl)}&filename=${fileName}`;
+      btn.innerText = `Download ${quality.toUpperCase()} MP4${countLabel}`;
+    }
+
+    async function fetchMedia(url) {
+      if (!url.includes('instagram.com')) {
+        errorText.innerText = 'Please enter a valid Instagram URL.';
+        errorText.style.display = 'block';
+        return;
+      }
+
+      errorText.style.display = 'none';
+      errorText.innerText = '';
+      resultsGrid.innerHTML = '';
+      multiNotice.style.display = 'none';
+      loader.style.display = 'block';
+
+      try {
+        const response = await fetch('https://save1m.onrender.com/download', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: url, mode: currentMode })
+        });
+
+        const data = await response.json();
+        loader.style.display = 'none';
+
+        if (data.media_list && data.media_list.length > 0) {
+          if (data.media_list.length > 1) {
+            multiNotice.innerText = `✨ Found ${data.media_list.length} Items • Swipe down ↓`;
+            multiNotice.style.display = 'inline-block';
+          }
+
+          data.media_list.forEach((item, index) => {
+            const card = document.createElement('div');
+            card.className = 'result-card';
+            const cardId = `item-${index}`;
+            
+            const countLabel = data.media_list.length > 1 ? ` #${index + 1}` : '';
+            const ext = (currentMode === 'photo') ? 'jpg' : (currentMode === 'audio' ? 'mp3' : 'mp4');
+            const defaultFileName = `save1m_${currentMode}_${index + 1}.${ext}`;
+            
+            const previewUrl = item.preview_url 
+              ? `https://save1m.onrender.com/proxy-image?url=${encodeURIComponent(item.preview_url)}` 
+              : 'https://via.placeholder.com/400x600?text=No+Preview';
+
+            const defaultDownloadUrl = `https://save1m.onrender.com/proxy-download?url=${encodeURIComponent(item.download_url)}&filename=${defaultFileName}`;
+
+            let qualityHtml = '';
+            if (currentMode === 'video') {
+              qualityHtml = `
+                <div class="quality-wrapper">
+                  <span class="quality-label"><i data-lucide="sliders" size="13"></i> Quality</span>
+                  <select class="quality-select" id="quality-sel-${cardId}" onchange="updateDownloadQuality('${cardId}', '${item.download_url}', '${countLabel}')">
+                    <option value="1080p">1080p Full HD (Best)</option>
+                    <option value="720p">720p HD (Balanced)</option>
+                    <option value="480p">480p SD (Fast)</option>
+                  </select>
+                </div>
+              `;
+            }
+
+            card.innerHTML = `
+              <img src="${previewUrl}" alt="Media Preview" onerror="this.src='https://via.placeholder.com/400x600?text=Preview+Unavailable'" />
+              <p style="font-size: 0.9rem; font-weight: 500; margin-bottom: 12px; color: #d1d5db;">${data.title || 'Instagram Media'}${countLabel}</p>
+              ${qualityHtml}
+              <a href="${defaultDownloadUrl}" class="dl-final-btn" id="dl-btn-${cardId}">Download ${currentMode.toUpperCase()}${countLabel}</a>
+            `;
+            resultsGrid.appendChild(card);
+          });
+
+          lucide.createIcons();
+          window.scrollTo({ top: resultsGrid.offsetTop - 30, behavior: 'smooth' });
+
+        } else {
+          errorText.innerText = data.error || 'Failed to fetch media. Please make sure the account is public.';
+          errorText.style.display = 'block';
+        }
+      } catch (err) {
+        loader.style.display = 'none';
+        errorText.innerText = 'Render server is waking up (takes ~30s on first load). Please click Download again in a few moments!';
+        errorText.style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>
