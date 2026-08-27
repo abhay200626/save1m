@@ -179,10 +179,11 @@
       padding: 6px 8px 6px 18px; 
       display: flex; 
       align-items: center; 
-      gap: 10px; 
+      gap: 8px; 
       box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); 
       backdrop-filter: blur(12px); 
       transition: border-color 0.3s; 
+      position: relative;
     }
 
     .search-container:focus-within { 
@@ -203,6 +204,27 @@
     }
 
     .search-input::placeholder { color: #6b7280; font-size: 0.9rem; }
+
+    /* Clear Cut Button */
+    .clear-btn {
+      display: none;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: #94a3b8;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .clear-btn:hover {
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+    }
 
     .action-btn { 
       background: var(--accent-gradient); 
@@ -532,7 +554,6 @@
       </div>
     </div>
 
-    <!-- Navigation Tabs with explicit IDs -->
     <nav class="nav-tabs">
       <button class="tab-btn active" id="tab-video" onclick="selectTab('video')"><i data-lucide="video" size="15"></i> Video</button>
       <button class="tab-btn" id="tab-audio" onclick="selectTab('audio')"><i data-lucide="music" size="15"></i> Audio</button>
@@ -550,6 +571,11 @@
     <div class="search-container">
       <i data-lucide="link" class="search-icon" size="18"></i>
       <input type="url" id="instaUrl" class="search-input" placeholder="Paste Instagram Link Here..." autocomplete="off" />
+      
+      <button class="clear-btn" id="clearBtn" onclick="clearInputBox()" title="Clear link">
+        <i data-lucide="x" size="14"></i>
+      </button>
+
       <button class="action-btn" id="mainBtn" onclick="handleActionClick()">
         <i data-lucide="clipboard" size="15" id="btnIcon"></i>
         <span id="btnText">Paste</span>
@@ -655,6 +681,7 @@
 
     let currentMode = 'video';
     const input = document.getElementById('instaUrl');
+    const clearBtn = document.getElementById('clearBtn');
     const btnText = document.getElementById('btnText');
     const btnIcon = document.getElementById('btnIcon');
     const loader = document.getElementById('loader');
@@ -690,12 +717,33 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    // Input monitoring for Clear button and Download/Paste toggle
     input.addEventListener('input', () => {
       const val = input.value.trim();
-      btnText.innerText = val ? "Download" : "Paste";
-      btnIcon.setAttribute('data-lucide', val ? 'download' : 'clipboard');
+      if (val) {
+        clearBtn.style.display = 'inline-flex';
+        btnText.innerText = "Download";
+        btnIcon.setAttribute('data-lucide', 'download');
+      } else {
+        clearBtn.style.display = 'none';
+        btnText.innerText = "Paste";
+        btnIcon.setAttribute('data-lucide', 'clipboard');
+      }
       lucide.createIcons();
     });
+
+    // 1-Click Clear Cut Function
+    function clearInputBox() {
+      input.value = '';
+      clearBtn.style.display = 'none';
+      btnText.innerText = "Paste";
+      btnIcon.setAttribute('data-lucide', 'clipboard');
+      errorText.style.display = 'none';
+      resultsGrid.innerHTML = '';
+      multiNotice.style.display = 'none';
+      lucide.createIcons();
+      input.focus();
+    }
 
     async function handleActionClick() {
       const val = input.value.trim();
@@ -706,6 +754,7 @@
             const clipText = await navigator.clipboard.readText();
             if (clipText && clipText.includes('instagram.com')) {
               input.value = clipText;
+              clearBtn.style.display = 'inline-flex';
               btnText.innerText = "Download";
               btnIcon.setAttribute('data-lucide', 'download');
               lucide.createIcons();
@@ -713,7 +762,7 @@
               return;
             }
           } catch (e) {
-            console.log('Clipboard permission not granted');
+            console.log('Clipboard access denied');
           }
         }
         input.focus();
