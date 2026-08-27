@@ -1037,7 +1037,7 @@
         </ul>
       </div>
 
-      <!-- Updated Support Section (Only Direct Contact) -->
+      <!-- Support Section (Direct Contact) -->
       <div class="footer-col">
         <h5>SUPPORT</h5>
         <ul>
@@ -1078,6 +1078,7 @@
         if (!startTime) startTime = currentTime;
         const progress = Math.min((currentTime - startTime) / duration, 1);
         
+        // EaseInOutQuad
         const ease = progress < 0.5 
           ? 2 * progress * progress 
           : -1 + (4 - 2 * progress) * progress;
@@ -1150,7 +1151,7 @@
       loader.style.display = 'block';
 
       try {
-        const response = await fetch('http://127.0.0.1:5000/download', {
+        const response = await fetch('https://save1m.onrender.com/download', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url: url, mode: currentMode })
@@ -1176,10 +1177,10 @@
             const fileName = `save1m_${currentMode}_${index + 1}.${ext}`;
             
             const previewUrl = item.preview_url 
-              ? `http://127.0.0.1:5000/proxy-image?url=${encodeURIComponent(item.preview_url)}` 
+              ? `https://save1m.onrender.com/proxy-image?url=${encodeURIComponent(item.preview_url)}` 
               : 'https://via.placeholder.com/400x600?text=No+Preview';
 
-            const downloadUrl = `http://127.0.0.1:5000/proxy-download?url=${encodeURIComponent(item.download_url)}&filename=${fileName}`;
+            const downloadUrl = `https://save1m.onrender.com/proxy-download?url=${encodeURIComponent(item.download_url)}&filename=${fileName}`;
 
             card.innerHTML = `
               <img src="${previewUrl}" alt="Media Preview" onerror="this.src='https://via.placeholder.com/400x600?text=Preview+Unavailable'" />
@@ -1206,7 +1207,7 @@
         }
       } catch (err) {
         loader.style.display = 'none';
-        errorText.innerText = 'Server connection error. Make sure Flask backend is running on port 5000.';
+        errorText.innerText = 'Server is waking up (Free tier takes ~30-50s on first request). Please retry in a moment!';
       }
     }
   </script>
