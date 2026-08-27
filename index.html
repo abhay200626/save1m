@@ -349,19 +349,22 @@
       justify-content: space-between; 
       align-items: flex-start; 
       gap: 16px;
+      width: 100%;
     }
 
     .step-item { 
       display: flex; 
       flex-direction: column; 
       align-items: center; 
+      justify-content: center;
       text-align: center;
       flex: 1; 
+      width: 100%;
     }
 
     .step-number { 
-      width: 46px; 
-      height: 46px; 
+      width: 48px; 
+      height: 48px; 
       border-radius: 50%; 
       background: #131929; 
       border: 2px solid #8b5cf6; 
@@ -369,12 +372,18 @@
       display: flex; 
       align-items: center; 
       justify-content: center; 
-      font-size: 1.1rem; 
+      font-size: 1.15rem; 
       font-weight: 700; 
-      margin-bottom: 12px; 
+      margin: 0 auto 12px auto; 
     }
 
-    .step-text { color: #d1d5db; font-size: 0.85rem; line-height: 1.4; }
+    .step-text { 
+      color: #d1d5db; 
+      font-size: 0.88rem; 
+      line-height: 1.4; 
+      text-align: center;
+      width: 100%;
+    }
 
     .showcase-card {
       background: var(--card-bg);
@@ -443,6 +452,22 @@
     .footer-col h5 { color: #fff; font-size: 0.88rem; font-weight: 700; margin-bottom: 12px; }
     .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
     .footer-col ul li a { color: var(--text-muted); text-decoration: none; font-size: 0.82rem; cursor: pointer; }
+    .footer-col ul li a:hover { color: #c4b5fd; }
+
+    .support-email-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #c084fc !important;
+      font-size: 0.82rem;
+      word-break: break-all;
+      transition: color 0.2s;
+    }
+
+    .support-email-link:hover {
+      color: #f472b6 !important;
+      text-decoration: underline;
+    }
 
     .footer-bottom {
       max-width: 1100px;
@@ -462,12 +487,33 @@
       .nav-tabs { width: 100%; justify-content: center; }
       .tab-btn { flex: 1; justify-content: center; padding: 8px 10px; font-size: 0.8rem; }
       h1 { font-size: 1.65rem; }
-      .steps-container { flex-direction: column; }
+      
+      .steps-container { 
+        flex-direction: column; 
+        align-items: center;
+        justify-content: center;
+        gap: 22px;
+      }
+      .step-item {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+      }
+      .step-number {
+        margin: 0 auto 10px auto !important;
+      }
+      .step-text {
+        text-align: center !important;
+      }
+
       .showcase-card { grid-template-columns: 1fr; }
       .feature-points { grid-template-columns: 1fr; }
       .dual-cards-grid { grid-template-columns: 1fr; }
       .faq-grid { grid-template-columns: 1fr; }
-      .footer-inner { grid-template-columns: 1fr 1fr; }
+      .footer-inner { grid-template-columns: 1fr 1fr; gap: 24px; }
       .footer-brand { grid-column: span 2; }
       .footer-copy { flex-direction: column; gap: 8px; text-align: center; }
     }
@@ -486,6 +532,7 @@
       </div>
     </div>
 
+    <!-- Navigation Tabs with explicit IDs -->
     <nav class="nav-tabs">
       <button class="tab-btn active" id="tab-video" onclick="selectTab('video')"><i data-lucide="video" size="15"></i> Video</button>
       <button class="tab-btn" id="tab-audio" onclick="selectTab('audio')"><i data-lucide="music" size="15"></i> Audio</button>
@@ -520,9 +567,18 @@
     <h2 class="steps-title" id="stepsTitle">Steps to Download Reels From Instagram</h2>
     <p class="steps-desc">Here’s a quick and easy way to do it:</p>
     <div class="steps-container">
-      <div class="step-item"><div class="step-number">1</div><div class="step-text">Copy Link from Instagram.</div></div>
-      <div class="step-item"><div class="step-number">2</div><div class="step-text">Paste Link into the box.</div></div>
-      <div class="step-item"><div class="step-number">3</div><div class="step-text">Choose Quality & Download.</div></div>
+      <div class="step-item">
+        <div class="step-number">1</div>
+        <div class="step-text">Copy Link from Instagram.</div>
+      </div>
+      <div class="step-item">
+        <div class="step-number">2</div>
+        <div class="step-text">Paste Link into the box.</div>
+      </div>
+      <div class="step-item">
+        <div class="step-number">3</div>
+        <div class="step-text">Choose Quality & Download.</div>
+      </div>
     </div>
   </section>
 
@@ -579,7 +635,8 @@
       <div class="footer-col">
         <h5>SUPPORT</h5>
         <ul>
-          <li><a href="mailto:abhaykumarverma1425@gmail.com">Contact Us</a></li>
+          <li><a href="mailto:abhaykumarverma1425@gmail.com" class="support-email-link"><i data-lucide="mail" size="14"></i> Contact Support</a></li>
+          <li><a href="mailto:abhaykumarverma1425@gmail.com" class="support-email-link">abhaykumarverma1425@gmail.com</a></li>
         </ul>
       </div>
     </div>
@@ -605,7 +662,6 @@
     const errorText = document.getElementById('errorText');
     const multiNotice = document.getElementById('multiNotice');
 
-    // Robust tab switcher
     function selectTab(mode) {
       currentMode = mode;
       
@@ -641,12 +697,10 @@
       lucide.createIcons();
     });
 
-    // Mobile-safe button handler
     async function handleActionClick() {
       const val = input.value.trim();
 
       if (!val) {
-        // Try clipboard
         if (navigator.clipboard && navigator.clipboard.readText) {
           try {
             const clipText = await navigator.clipboard.readText();
