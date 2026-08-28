@@ -1,7 +1,9 @@
 import os
 import re
 import json
+import html
 import requests
+from urllib.parse import unquote
 from flask import Flask, request, jsonify, Response, stream_with_context
 from flask_cors import CORS
 import yt_dlp
@@ -41,13 +43,15 @@ def get_shortcode(url):
     match = re.search(r'/(?:p|reel|reels|tv)/([A-Za-z0-9_-]+)', url)
     return match.group(1) if match else None
 
-def clean_url(raw_url):
+def fix_media_url(raw_url):
+    """Accurately restores Instagram CDN signed URLs without breaking tokens"""
     if not raw_url:
         return None
-    return raw_url.replace('\\u0026', '&').replace('&amp;', '&').replace('\\/', '/').replace('&amp%3B', '&')
+    url = raw_url.replace('\\u0026', '&').replace('&amp;', '&').replace('\\/', '/')
+    url = html.unescape(url)
+    return url
 
 def extract_instagram_all_media(url, mode='video'):
-    """Universal high-speed extractor for Reels, Videos, Audio & Photos"""
     shortcode = get_shortcode(url)
     if not shortcode:
         return None
@@ -60,7 +64,7 @@ def extract_instagram_all_media(url, mode='video'):
         'Referer': clean_url_base,
     }
 
-    # Strategy 1: Embed Page Scraping (Works reliably without Instagram Login on cloud)
+    # 1. Embed Page Parsing (Direct CDN Stream)
     try:
         embed_url = f"https://www.instagram.com/p/{shortcode}/embed/captioned/"
         r = requests.get(embed_url, headers=headers, timeout=10)
@@ -74,7 +78,7 @@ def extract_instagram_all_media(url, mode='video'):
                 if clean_cap:
                     caption = clean_cap.split('\n')[0][:50]
 
-            # 1. Video / Reel extraction
+            # Video / Reel
             if mode in ['video', 'audio']:
                 video_matches = re.findall(r'"video_url"\s*:\s*"([^"]+)"', text)
                 if not video_matches:
@@ -83,15 +87,15 @@ def extract_instagram_all_media(url, mode='video'):
                     video_matches = re.findall(r'class="EmbeddedMediaVideo"[^>]*src="([^"]+)"', text)
 
                 if video_matches:
-                    video_url = clean_url(video_matches[0])
+                    vid_url = fix_media_url(video_matches[0])
                     thumb_match = re.search(r'class="EmbeddedMediaImage"[^>]*src="([^"]+)"', text)
-                    thumb_url = clean_url(thumb_match.group(1)) if thumb_match else video_url
+                    thumb_url = fix_media_url(thumb_match.group(1)) if thumb_match else vid_url
                     return {
                         "title": caption,
-                        "media_list": [{"download_url": video_url, "preview_url": thumb_url}]
+                        "media_list": [{"download_url": vid_url, "preview_url": thumb_url}]
                     }
 
-            # 2. Photo / Carousel extraction
+            # Photos
             if mode == 'photo':
                 photo_matches = re.findall(r'"display_url"\s*:\s*"([^"]+)"', text)
                 if not photo_matches:
@@ -100,7 +104,7 @@ def extract_instagram_all_media(url, mode='video'):
                 if photo_matches:
                     cleaned = []
                     for u in photo_matches:
-                        c = clean_url(u)
+                        c = fix_media_url(u)
                         if c and c not in cleaned and 's150x150' not in c and 's320x320' not in c:
                             cleaned.append(c)
                     if cleaned:
@@ -111,7 +115,7 @@ def extract_instagram_all_media(url, mode='video'):
     except Exception:
         pass
 
-    # Strategy 2: GraphQL Web API
+    # 2. GraphQL Query with doc_id
     try:
         doc_url = f"https://www.instagram.com/graphql/query/?doc_id=8845758582119845&variables={json.dumps({'shortcode': shortcode})}"
         r = requests.get(doc_url, headers=headers, timeout=8)
@@ -124,14 +128,12 @@ def extract_instagram_all_media(url, mode='video'):
                 if edges:
                     caption = edges[0].get('node', {}).get('text', 'Instagram_Media').split('\n')[0][:50]
 
-                # Check if it is a video
                 if media.get('is_video') and (mode in ['video', 'audio']):
-                    vid_url = clean_url(media.get('video_url'))
-                    thumb = clean_url(media.get('display_url'))
+                    vid_url = fix_media_url(media.get('video_url'))
+                    thumb = fix_media_url(media.get('display_url'))
                     if vid_url:
                         return {"title": caption, "media_list": [{"download_url": vid_url, "preview_url": thumb}]}
 
-                # Multi-photo Carousel
                 sidecar = media.get('edge_sidecar_to_children', {}).get('edges', [])
                 if sidecar and len(sidecar) > 0 and mode == 'photo':
                     media_list = []
@@ -139,12 +141,12 @@ def extract_instagram_all_media(url, mode='video'):
                         node = child.get('node', {})
                         img_url = node.get('display_url') or (node.get('display_resources', [{}])[-1].get('src'))
                         if img_url:
-                            c = clean_url(img_url)
+                            c = fix_media_url(img_url)
                             media_list.append({"download_url": c, "preview_url": c})
                     if len(media_list) > 0:
                         return {"title": caption, "media_list": media_list}
                 elif media.get('display_url') and mode == 'photo':
-                    c = clean_url(media['display_url'])
+                    c = fix_media_url(media['display_url'])
                     return {"title": caption, "media_list": [{"download_url": c, "preview_url": c}]}
     except Exception:
         pass
@@ -160,19 +162,19 @@ def fetch_media():
     if not url or 'instagram.com' not in url:
         return jsonify({"error": "Please provide a valid Instagram URL"}), 400
 
-    # 1. Try Direct Fast Instagram Extractor first
+    # 1. First attempt: Direct Extractor
     direct_res = extract_instagram_all_media(url, mode=mode)
     if direct_res and direct_res.get('media_list') and len(direct_res['media_list']) > 0:
         return jsonify(direct_res)
 
-    # 2. yt-dlp Engine Fallback
+    # 2. Second attempt: yt-dlp Engine
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
         'extract_flat': False,
         'skip_download': True,
         'ignoreerrors': True,
-        'format': 'bestvideo+bestaudio/best' if mode == 'video' else 'best',
+        'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' if mode == 'video' else 'best',
     }
 
     try:
@@ -193,12 +195,12 @@ def fetch_media():
                     dl_url = entry.get('url') or entry.get('thumbnail')
                     thumb = entry.get('thumbnail') or dl_url
                     if dl_url:
-                        media_list.append({"download_url": clean_url(dl_url), "preview_url": clean_url(thumb)})
+                        media_list.append({"download_url": fix_media_url(dl_url), "preview_url": fix_media_url(thumb)})
             else:
                 dl_url = info.get('url') or info.get('thumbnail')
                 thumb = info.get('thumbnail') or dl_url
                 if dl_url:
-                    media_list.append({"download_url": clean_url(dl_url), "preview_url": clean_url(thumb)})
+                    media_list.append({"download_url": fix_media_url(dl_url), "preview_url": fix_media_url(thumb)})
 
             if not media_list:
                 return jsonify({"error": "No media stream found for this URL."}), 404
@@ -218,12 +220,11 @@ def proxy_image():
     if not img_url:
         return "Missing URL", 400
     try:
+        clean_target = unquote(img_url)
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
         }
-        res = requests.get(img_url, headers=headers, stream=True, timeout=12)
-        if res.status_code != 200:
-            return "Failed to load image", res.status_code
+        res = requests.get(clean_target, headers=headers, stream=True, timeout=12)
         resp = Response(res.content, content_type=res.headers.get('content-type', 'image/jpeg'))
         resp.headers['Access-Control-Allow-Origin'] = '*'
         resp.headers['Cache-Control'] = 'public, max-age=86400'
@@ -234,18 +235,18 @@ def proxy_image():
 
 @app.route('/proxy-download', methods=['GET'])
 def proxy_download():
-    """Bulletproof stream downloader: Ensures 100% playable video/audio files"""
     media_url = request.args.get('url')
     filename = request.args.get('filename', 'save1m_media.mp4')
     if not media_url:
         return "Missing URL", 400
 
     try:
+        clean_target = unquote(media_url)
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
             'Accept': '*/*',
         }
-        req = requests.get(media_url, headers=headers, stream=True, timeout=30)
+        req = requests.get(clean_target, headers=headers, stream=True, timeout=30)
         
         if req.status_code != 200:
             return f"CDN Error: {req.status_code}", 502
