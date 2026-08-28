@@ -89,9 +89,11 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      position: relative;
+      font-size: 1.3rem;
+      line-height: 1;
       box-shadow: 0 0 16px rgba(168, 85, 247, 0.4);
       flex-shrink: 0;
+      user-select: none;
     }
 
     .brand-text {
@@ -953,9 +955,7 @@
 
   <header>
     <div class="brand-logo" onclick="switchTab('video', document.querySelectorAll('.tab-btn')[0])">
-      <div class="brand-icon">
-        <i data-lucide="zap" size="18" style="color: #f472b6;"></i>
-      </div>
+      <div class="brand-icon">🐼</div>
       <div class="brand-text">
         <div class="brand-title">SAVE<span class="highlight">1M</span></div>
         <div class="brand-tag">ULTRA HD ENGINE</div>
@@ -1145,10 +1145,8 @@
   <footer>
     <div class="footer-inner">
       <div class="footer-brand">
-        <div class="brand-logo">
-          <div class="brand-icon">
-            <i data-lucide="zap" size="16" style="color: #f472b6;"></i>
-          </div>
+        <div class="brand-logo" onclick="switchTab('video', document.querySelectorAll('.tab-btn')[0])">
+          <div class="brand-icon">🐼</div>
           <div class="brand-text">
             <div class="brand-title" style="font-size: 1.15rem;">SAVE<span class="highlight">1M</span></div>
             <div class="brand-tag">ULTRA HD ENGINE</div>
