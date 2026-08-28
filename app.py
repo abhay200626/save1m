@@ -13,17 +13,18 @@ VISITOR_FILE = "visitor_count.txt"
 def get_visitor_count():
     if not os.path.exists(VISITOR_FILE):
         with open(VISITOR_FILE, "w", encoding="utf-8") as f:
-            f.write("1")
-        return 1
+            f.write("50")
+        return 50
     try:
         with open(VISITOR_FILE, "r", encoding="utf-8") as f:
-            count = int(f.read().strip() or "0")
+            content = f.read().strip()
+            count = int(content) if content else 50
         count += 1
         with open(VISITOR_FILE, "w", encoding="utf-8") as f:
             f.write(str(count))
         return count
     except Exception:
-        return 1
+        return 50
 
 @app.route('/', methods=['GET'])
 def health_check():
@@ -48,7 +49,6 @@ def fetch_media():
         'no_warnings': True,
         'extract_flat': False,
         'skip_download': True,
-        'format': 'best',
     }
 
     try:
@@ -58,24 +58,40 @@ def fetch_media():
                 return jsonify({"error": "Could not extract media. Post might be private or removed."}), 404
 
             title = info.get('title') or info.get('description') or 'Instagram_Media'
-            # First line of description/caption if available
             title = title.split('\n')[0][:50].strip()
 
             media_list = []
 
-            # Handle carousel/multi-items
+            # Multi-image or carousel post
             if 'entries' in info and info['entries']:
                 for entry in info['entries']:
-                    dl_url = entry.get('url') or entry.get('webpage_url')
-                    thumb = entry.get('thumbnail') or ''
+                    dl_url = None
+                    if mode == 'photo':
+                        dl_url = entry.get('thumbnail') or entry.get('url') or entry.get('webpage_url')
+                    else:
+                        dl_url = entry.get('url') or entry.get('webpage_url') or entry.get('thumbnail')
+                    
+                    thumb = entry.get('thumbnail') or dl_url
                     if dl_url:
                         media_list.append({
                             "download_url": dl_url,
                             "preview_url": thumb
                         })
             else:
-                dl_url = info.get('url')
-                thumb = info.get('thumbnail') or ''
+                # Single photo or video
+                if mode == 'photo':
+                    # Best thumbnail / image URL for photos
+                    thumbnails = info.get('thumbnails', [])
+                    if thumbnails:
+                        best_thumb = thumbnails[-1].get('url')
+                        dl_url = best_thumb or info.get('thumbnail') or info.get('url')
+                    else:
+                        dl_url = info.get('thumbnail') or info.get('url')
+                    thumb = dl_url
+                else:
+                    dl_url = info.get('url') or info.get('thumbnail')
+                    thumb = info.get('thumbnail') or ''
+
                 if dl_url:
                     media_list.append({
                         "download_url": dl_url,
@@ -83,7 +99,7 @@ def fetch_media():
                     })
 
             if not media_list:
-                return jsonify({"error": "No direct media stream found. Make sure post is public."}), 404
+                return jsonify({"error": "No media found. Please check if account is public."}), 404
 
             return jsonify({
                 "title": title,
@@ -101,7 +117,8 @@ def proxy_image():
         return "Missing URL", 400
     try:
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Referer': 'https://www.instagram.com/'
         }
         res = requests.get(img_url, headers=headers, stream=True, timeout=10)
         return Response(res.content, content_type=res.headers.get('content-type', 'image/jpeg'))
@@ -118,13 +135,23 @@ def proxy_download():
 
     try:
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Referer': 'https://www.instagram.com/'
         }
-        req = requests.get(media_url, headers=headers, stream=True, timeout=15)
-        
+        req = requests.get(media_url, headers=headers, stream=True, timeout=20)
+
+        # Detect content type
+        content_type = req.headers.get('content-type', 'application/octet-stream')
+        if filename.endswith('.jpg') or filename.endswith('.jpeg'):
+            content_type = 'image/jpeg'
+        elif filename.endswith('.mp4'):
+            content_type = 'video/mp4'
+        elif filename.endswith('.mp3'):
+            content_type = 'audio/mpeg'
+
         response = Response(
             req.iter_content(chunk_size=8192),
-            content_type=req.headers.get('content-type', 'application/octet-stream')
+            content_type=content_type
         )
         response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response

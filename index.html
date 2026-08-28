@@ -442,49 +442,6 @@
       width: 100%;
     }
 
-    .showcase-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 20px;
-      padding: 24px 18px;
-      display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
-      gap: 28px;
-      align-items: center;
-    }
-
-    .showcase-text h2 { font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 12px; }
-    .showcase-text p { color: var(--text-muted); line-height: 1.55; font-size: 0.9rem; margin-bottom: 18px; }
-
-    .feature-points { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
-    .point-item { display: flex; align-items: flex-start; gap: 8px; font-size: 0.85rem; color: #e5e7eb; }
-    .point-icon { background: rgba(139, 92, 246, 0.2); color: #a78bfa; border-radius: 50%; padding: 3px; flex-shrink: 0; }
-
-    .phone-mockup-wrapper {
-      width: 100%;
-      max-width: 280px;
-      border-radius: 20px;
-      overflow: hidden;
-      border: 1px solid rgba(236, 72, 153, 0.35);
-      background: #11162a;
-      margin: 0 auto;
-    }
-
-    .phone-mockup-wrapper img { width: 100%; height: 280px; object-fit: cover; display: block; }
-    .phone-caption { margin-top: 10px; font-size: 0.82rem; color: #cbd5e1; text-align: center; }
-
-    .dual-cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-    .info-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 18px; padding: 18px; }
-    .info-card h3 { font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 10px; }
-    .info-card p { color: var(--text-muted); font-size: 0.88rem; line-height: 1.55; }
-
-    .faq-title { font-size: 1.6rem; font-weight: 800; text-align: center; color: #fff; margin-bottom: 6px; }
-    .faq-sub { color: var(--text-muted); font-size: 0.88rem; text-align: center; margin-bottom: 25px; }
-    .faq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    .faq-item { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 14px; padding: 16px; }
-    .faq-item h4 { font-size: 0.95rem; font-weight: 600; color: #fff; margin-bottom: 6px; }
-    .faq-item p { color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; }
-
     footer {
       width: 100%;
       background: #060911;
@@ -566,11 +523,6 @@
       .step-text {
         text-align: center !important;
       }
-
-      .showcase-card { grid-template-columns: 1fr; }
-      .feature-points { grid-template-columns: 1fr; }
-      .dual-cards-grid { grid-template-columns: 1fr; }
-      .faq-grid { grid-template-columns: 1fr; }
       .footer-inner { grid-template-columns: 1fr 1fr; gap: 24px; }
       .footer-brand { grid-column: span 2; }
       .footer-copy { flex-direction: column; gap: 8px; text-align: center; }
@@ -590,8 +542,8 @@
       </div>
     </div>
 
-    <!-- Live Real Visitor Count -->
-    <div class="visitor-badge" title="Total Verified Website Visitors">
+    <!-- Live Verified Real Visitor Count -->
+    <div class="visitor-badge" title="Total Real Visitors">
       <span class="live-dot"></span>
       <span>Visitors:</span>
       <span class="count" id="visitorCount">Loading...</span>
@@ -651,34 +603,6 @@
     </div>
   </section>
 
-  <section class="content-section">
-    <div class="showcase-card">
-      <div class="showcase-text">
-        <h2>How Instagram Downloader Works?</h2>
-        <p>Save1M allows you to extract and download Reels, Videos, and Photos directly to your gallery in highest available resolution.</p>
-        <div class="feature-points">
-          <div class="point-item"><i data-lucide="check" size="13" class="point-icon"></i><span><strong>No Watermark</strong> or logo.</span></div>
-          <div class="point-item"><i data-lucide="check" size="13" class="point-icon"></i><span><strong>Direct Gallery Save</strong> with post caption as file name.</span></div>
-          <div class="point-item"><i data-lucide="check" size="13" class="point-icon"></i><span><strong>100% Free</strong> lifetime access.</span></div>
-          <div class="point-item"><i data-lucide="check" size="13" class="point-icon"></i><span><strong>Multi-Format:</strong> MP4, MP3 & JPG.</span></div>
-        </div>
-      </div>
-      <div class="showcase-visual">
-        <div class="phone-mockup-wrapper">
-          <img src="https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?q=80&w=800&auto=format&fit=crop" alt="Instagram Preview" />
-        </div>
-        <div class="phone-caption">Instant downloads in HD</div>
-      </div>
-    </div>
-  </section>
-
-  <section class="content-section">
-    <div class="faq-grid">
-      <div class="faq-item"><h4>Is Save1M free to use?</h4><p>Yes, completely free with unlimited downloads.</p></div>
-      <div class="faq-item"><h4>Can I choose video quality?</h4><p>Yes, choose between 1080p, 720p, or 480p SD before downloading.</p></div>
-    </div>
-  </section>
-
   <footer>
     <div class="footer-inner">
       <div class="footer-brand">
@@ -733,7 +657,7 @@
     const multiNotice = document.getElementById('multiNotice');
     const visitorCountEl = document.getElementById('visitorCount');
 
-    // Server-Side Real Visitor Counter Fetcher
+    // Visitor Counter Fetcher
     async function initVisitorCount() {
       try {
         const res = await fetch('https://save1m.onrender.com/api/visitors');
@@ -749,7 +673,7 @@
     }
 
     function fallbackVisitorCount() {
-      let currentVisits = parseInt(localStorage.getItem('save1m_visits') || '1482');
+      let currentVisits = parseInt(localStorage.getItem('save1m_visits') || '50');
       currentVisits += 1;
       localStorage.setItem('save1m_visits', currentVisits);
       visitorCountEl.innerText = Number(currentVisits).toLocaleString();
