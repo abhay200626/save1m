@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import html
 import requests
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
@@ -41,27 +42,34 @@ def get_shortcode(url):
     match = re.search(r'/(?:p|reel|reels|tv)/([A-Za-z0-9_-]+)', url)
     return match.group(1) if match else None
 
-def extract_all_instagram_photos(url):
-    """Deep multi-source extractor for all images in single and carousel posts"""
+def clean_cdn_url(raw_url):
+    """Unescape and clean Instagram CDN URLs"""
+    if not raw_url:
+        return None
+    url = raw_url.replace('\\u0026', '&').replace('&amp;', '&').replace('\\/', '/')
+    return url
+
+def extract_all_carousel_photos(url):
+    """Comprehensive extractor for all photos in multi-image carousel posts"""
     shortcode = get_shortcode(url)
     clean_url = url.split('?')[0].rstrip('/')
-    
+
     headers = {
-        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'x-ig-app-id': '936619743392459',
         'Accept-Language': 'en-US,en;q=0.9',
-        'Referer': 'https://www.instagram.com/',
+        'Referer': f'https://www.instagram.com/p/{shortcode}/' if shortcode else 'https://www.instagram.com/',
         'Sec-Fetch-Mode': 'cors',
     }
 
-    # Method 1: GraphQL Shortcode Query (Best for Carousel / All Photos)
+    # Method 1: Official Instagram Web GraphQL Query with doc_id
     if shortcode:
         try:
-            gql_url = f"https://www.instagram.com/graphql/query/?query_hash=b3055c01b4b222b8a47dc12b090e4e64&variables={json.dumps({'shortcode': shortcode})}"
-            r = requests.get(gql_url, headers=headers, timeout=10)
+            doc_url = f"https://www.instagram.com/graphql/query/?doc_id=8845758582119845&variables={json.dumps({'shortcode': shortcode})}"
+            r = requests.get(doc_url, headers=headers, timeout=10)
             if r.status_code == 200:
                 data = r.json()
-                media = data.get('data', {}).get('shortcode_media', {})
+                media = data.get('data', {}).get('xdt_shortcode_media') or data.get('data', {}).get('shortcode_media')
                 if media:
                     caption = "Instagram_Photo"
                     edges = media.get('edge_media_to_caption', {}).get('edges', [])
@@ -69,61 +77,57 @@ def extract_all_instagram_photos(url):
                         caption = edges[0].get('node', {}).get('text', 'Instagram_Photo').split('\n')[0][:50]
 
                     media_list = []
-                    # Check for multi-image carousel
+                    # Check carousel children
                     sidecar = media.get('edge_sidecar_to_children', {}).get('edges', [])
                     if sidecar:
                         for item in sidecar:
                             node = item.get('node', {})
                             img_url = node.get('display_url') or (node.get('display_resources', [{}])[-1].get('src'))
                             if img_url:
-                                media_list.append({"download_url": img_url, "preview_url": img_url})
+                                media_list.append({"download_url": clean_cdn_url(img_url), "preview_url": clean_cdn_url(img_url)})
                     else:
                         img_url = media.get('display_url') or (media.get('display_resources', [{}])[-1].get('src'))
                         if img_url:
-                            media_list.append({"download_url": img_url, "preview_url": img_url})
+                            media_list.append({"download_url": clean_cdn_url(img_url), "preview_url": clean_cdn_url(img_url)})
 
                     if media_list:
                         return {"title": caption, "media_list": media_list}
         except Exception:
             pass
 
-    # Method 2: Embed Scraper for Carousel & Single Images
+    # Method 2: Embed Scraper with Deep JSON String Parsing
     try:
         embed_url = f"https://www.instagram.com/p/{shortcode}/embed/captioned/" if shortcode else f"{clean_url}/embed/captioned/"
-        r = requests.get(embed_url, headers=headers, timeout=10)
+        r = requests.get(embed_url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}, timeout=10)
         if r.status_code == 200:
-            html = r.text
+            text = r.text
             caption = "Instagram_Photo"
-            cap_match = re.search(r'<div class="Caption"[^>]*>(.*?)</div>', html, re.DOTALL)
+            cap_match = re.search(r'<div class="Caption"[^>]*>(.*?)</div>', text, re.DOTALL)
             if cap_match:
                 clean_cap = re.sub('<[^<]+?>', '', cap_match.group(1)).strip()
                 if clean_cap:
                     caption = clean_cap.split('\n')[0][:50]
 
-            # Match all CDN image URLs
-            img_urls = re.findall(r'class="EmbeddedMediaImage"[^>]*src="([^"]+)"', html)
-            if not img_urls:
-                img_urls = re.findall(r'src="(https://[^"]*cdninstagram\.com/[^"]*)"', html)
+            # Find all display_url entries in embedded JSON
+            display_urls = re.findall(r'"display_url"\s*:\s*"([^"]+)"', text)
+            if not display_urls:
+                display_urls = re.findall(r'"src"\s*:\s*"(https:[^"]+cdninstagram\.com[^"]+)"', text)
 
-            if img_urls:
-                clean_imgs = list(dict.fromkeys([u.replace('&amp;', '&') for u in img_urls]))
-                media_list = [{"download_url": u, "preview_url": u} for u in clean_imgs]
-                return {"title": caption, "media_list": media_list}
-    except Exception:
-        pass
+            if not display_urls:
+                display_urls = re.findall(r'class="EmbeddedMediaImage"[^>]*src="([^"]+)"', text)
 
-    # Method 3: Direct Webpage HTML Meta Scraping
-    try:
-        r = requests.get(clean_url, headers=headers, timeout=10)
-        if r.status_code == 200:
-            html = r.text
-            og_images = re.findall(r'<meta property="og:image" content="([^"]+)"', html)
-            if og_images:
-                clean_imgs = list(dict.fromkeys([u.replace('&amp;', '&') for u in og_images]))
-                return {
-                    "title": "Instagram_Photo",
-                    "media_list": [{"download_url": u, "preview_url": u} for u in clean_imgs]
-                }
+            if display_urls:
+                cleaned = []
+                for u in display_urls:
+                    c = clean_cdn_url(u)
+                    if c and c not in cleaned and 's150x150' not in c and 's320x320' not in c:
+                        cleaned.append(c)
+
+                if cleaned:
+                    return {
+                        "title": caption,
+                        "media_list": [{"download_url": u, "preview_url": u} for u in cleaned]
+                    }
     except Exception:
         pass
 
@@ -138,13 +142,13 @@ def fetch_media():
     if not url or 'instagram.com' not in url:
         return jsonify({"error": "Please provide a valid Instagram URL"}), 400
 
-    # Handle Photo requests directly with full multi-image extractor
+    # 1. Photo Mode -> Try deep carousel scraper first
     if mode == 'photo':
-        photo_res = extract_all_instagram_photos(url)
+        photo_res = extract_all_carousel_photos(url)
         if photo_res and photo_res.get('media_list'):
             return jsonify(photo_res)
 
-    # Handle Video / Reels / Audio with yt-dlp
+    # 2. Video / Reels / Audio -> Use yt-dlp
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
@@ -158,7 +162,7 @@ def fetch_media():
             info = ydl.extract_info(url, download=False)
             
             if not info:
-                photo_res = extract_all_instagram_photos(url)
+                photo_res = extract_all_carousel_photos(url)
                 if photo_res and photo_res.get('media_list'):
                     return jsonify(photo_res)
                 return jsonify({"error": "Unable to extract media. Please ensure post is public."}), 404
@@ -182,7 +186,7 @@ def fetch_media():
                     media_list.append({"download_url": dl_url, "preview_url": thumb})
 
             if not media_list:
-                photo_res = extract_all_instagram_photos(url)
+                photo_res = extract_all_carousel_photos(url)
                 if photo_res and photo_res.get('media_list'):
                     return jsonify(photo_res)
                 return jsonify({"error": "No media stream available for this URL."}), 404
@@ -193,10 +197,10 @@ def fetch_media():
             })
 
     except Exception:
-        photo_res = extract_all_instagram_photos(url)
+        photo_res = extract_all_carousel_photos(url)
         if photo_res and photo_res.get('media_list'):
             return jsonify(photo_res)
-        return jsonify({"error": "Failed to fetch content. Please check if the account is public."}), 500
+        return jsonify({"error": "Failed to fetch content. Please check if post is public."}), 500
 
 
 @app.route('/proxy-image', methods=['GET'])
@@ -206,10 +210,10 @@ def proxy_image():
         return "Missing URL", 400
     try:
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
             'Referer': 'https://www.instagram.com/'
         }
-        res = requests.get(img_url, headers=headers, stream=True, timeout=12)
+        res = requests.get(img_url, headers=headers, stream=True, timeout=15)
         return Response(res.content, content_type=res.headers.get('content-type', 'image/jpeg'))
     except Exception as e:
         return str(e), 500
@@ -224,7 +228,7 @@ def proxy_download():
 
     try:
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
             'Referer': 'https://www.instagram.com/'
         }
         req = requests.get(media_url, headers=headers, stream=True, timeout=25)

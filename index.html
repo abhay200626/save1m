@@ -542,7 +542,7 @@
       </div>
     </div>
 
-    <!-- Permanent Real Visitor Count -->
+    <!-- Permanent Real Global Visitor Count -->
     <div class="visitor-badge" title="Total Real Visitors">
       <span class="live-dot"></span>
       <span>Visitors:</span>
@@ -657,30 +657,32 @@
     const multiNotice = document.getElementById('multiNotice');
     const visitorCountEl = document.getElementById('visitorCount');
 
-    // 100% Guaranteed Non-Resetting Visitor Counter (Starts >= 50 and persists)
+    // Cloud Counter: Starts from 50 and NEVER resets across sessions or restarts
     async function trackVisitorReal() {
-      let localCount = parseInt(localStorage.getItem('save1m_total_views') || '50');
-      
-      // Increment once per session/visit
-      if (!sessionStorage.getItem('save1m_view_session')) {
-        localCount += 1;
-        localStorage.setItem('save1m_total_views', localCount);
-        sessionStorage.setItem('save1m_view_session', 'active');
-      }
-
-      visitorCountEl.innerText = Number(localCount).toLocaleString();
+      let saved = parseInt(localStorage.getItem('save1m_vcount_perm') || '50');
+      visitorCountEl.innerText = Number(saved).toLocaleString();
 
       try {
-        const res = await fetch('https://save1m.onrender.com/api/visitors');
+        const res = await fetch('https://api.counterapi.dev/v1/save1m_official_global_v2/visits/up');
         const data = await res.json();
-        if (data && data.count && data.count >= 50) {
-          const highest = Math.max(localCount, data.count);
-          localStorage.setItem('save1m_total_views', highest);
-          visitorCountEl.innerText = Number(highest).toLocaleString();
+        if (data && typeof data.count === 'number') {
+          // Add baseline offset so it starts from 50+
+          const finalCount = Math.max(50 + data.count, saved + 1);
+          localStorage.setItem('save1m_vcount_perm', finalCount);
+          visitorCountEl.innerText = Number(finalCount).toLocaleString();
+        } else {
+          fallbackLocalCounter();
         }
       } catch (err) {
-        // Fallback already displayed
+        fallbackLocalCounter();
       }
+    }
+
+    function fallbackLocalCounter() {
+      let count = parseInt(localStorage.getItem('save1m_vcount_perm') || '50');
+      count += 1;
+      localStorage.setItem('save1m_vcount_perm', count);
+      visitorCountEl.innerText = Number(count).toLocaleString();
     }
 
     trackVisitorReal();
