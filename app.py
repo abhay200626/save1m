@@ -1,7 +1,6 @@
 import os
 import re
 import json
-import html
 import requests
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
@@ -42,92 +41,106 @@ def get_shortcode(url):
     match = re.search(r'/(?:p|reel|reels|tv)/([A-Za-z0-9_-]+)', url)
     return match.group(1) if match else None
 
-def clean_cdn_url(raw_url):
-    """Unescape and clean Instagram CDN URLs"""
+def clean_url(raw_url):
     if not raw_url:
         return None
-    url = raw_url.replace('\\u0026', '&').replace('&amp;', '&').replace('\\/', '/')
-    return url
+    return raw_url.replace('\\u0026', '&').replace('&amp;', '&').replace('\\/', '/')
 
-def extract_all_carousel_photos(url):
-    """Comprehensive extractor for all photos in multi-image carousel posts"""
+def extract_exact_post_photos(url):
+    """Extracts EXACTLY and ONLY the images posted in this specific carousel or single post"""
     shortcode = get_shortcode(url)
-    clean_url = url.split('?')[0].rstrip('/')
+    if not shortcode:
+        return None
 
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
         'x-ig-app-id': '936619743392459',
         'Accept-Language': 'en-US,en;q=0.9',
-        'Referer': f'https://www.instagram.com/p/{shortcode}/' if shortcode else 'https://www.instagram.com/',
+        'Referer': f'https://www.instagram.com/p/{shortcode}/',
         'Sec-Fetch-Mode': 'cors',
     }
 
-    # Method 1: Official Instagram Web GraphQL Query with doc_id
-    if shortcode:
-        try:
-            doc_url = f"https://www.instagram.com/graphql/query/?doc_id=8845758582119845&variables={json.dumps({'shortcode': shortcode})}"
-            r = requests.get(doc_url, headers=headers, timeout=10)
-            if r.status_code == 200:
-                data = r.json()
-                media = data.get('data', {}).get('xdt_shortcode_media') or data.get('data', {}).get('shortcode_media')
-                if media:
-                    caption = "Instagram_Photo"
-                    edges = media.get('edge_media_to_caption', {}).get('edges', [])
-                    if edges:
-                        caption = edges[0].get('node', {}).get('text', 'Instagram_Photo').split('\n')[0][:50]
+    # Method 1: Official Instagram GraphQL Document Query
+    try:
+        doc_url = f"https://www.instagram.com/graphql/query/?doc_id=8845758582119845&variables={json.dumps({'shortcode': shortcode})}"
+        r = requests.get(doc_url, headers=headers, timeout=10)
+        if r.status_code == 200:
+            data = r.json()
+            media = data.get('data', {}).get('xdt_shortcode_media') or data.get('data', {}).get('shortcode_media')
+            if media:
+                caption = "Instagram_Photo"
+                edges = media.get('edge_media_to_caption', {}).get('edges', [])
+                if edges:
+                    caption = edges[0].get('node', {}).get('text', 'Instagram_Photo').split('\n')[0][:50]
 
+                # Exact Carousel Children extraction
+                sidecar = media.get('edge_sidecar_to_children', {}).get('edges', [])
+                if sidecar:
                     media_list = []
-                    # Check carousel children
-                    sidecar = media.get('edge_sidecar_to_children', {}).get('edges', [])
-                    if sidecar:
-                        for item in sidecar:
-                            node = item.get('node', {})
-                            img_url = node.get('display_url') or (node.get('display_resources', [{}])[-1].get('src'))
-                            if img_url:
-                                media_list.append({"download_url": clean_cdn_url(img_url), "preview_url": clean_cdn_url(img_url)})
-                    else:
-                        img_url = media.get('display_url') or (media.get('display_resources', [{}])[-1].get('src'))
+                    for item in sidecar:
+                        node = item.get('node', {})
+                        # Pick only the highest quality photo for this exact slide
+                        img_url = node.get('display_url')
+                        if not img_url and node.get('display_resources'):
+                            img_url = node['display_resources'][-1].get('src')
                         if img_url:
-                            media_list.append({"download_url": clean_cdn_url(img_url), "preview_url": clean_cdn_url(img_url)})
-
+                            cleaned = clean_url(img_url)
+                            media_list.append({"download_url": cleaned, "preview_url": cleaned})
                     if media_list:
                         return {"title": caption, "media_list": media_list}
-        except Exception:
-            pass
+                else:
+                    # Single photo post
+                    img_url = media.get('display_url')
+                    if not img_url and media.get('display_resources'):
+                        img_url = media['display_resources'][-1].get('src')
+                    if img_url:
+                        cleaned = clean_url(img_url)
+                        return {"title": caption, "media_list": [{"download_url": cleaned, "preview_url": cleaned}]}
+    except Exception:
+        pass
 
-    # Method 2: Embed Scraper with Deep JSON String Parsing
+    # Method 2: Embed Page with Strict JSON Context Parsing (No junk / No extra thumbnails)
     try:
-        embed_url = f"https://www.instagram.com/p/{shortcode}/embed/captioned/" if shortcode else f"{clean_url}/embed/captioned/"
+        embed_url = f"https://www.instagram.com/p/{shortcode}/embed/captioned/"
         r = requests.get(embed_url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}, timeout=10)
         if r.status_code == 200:
-            text = r.text
+            html = r.text
+            
             caption = "Instagram_Photo"
-            cap_match = re.search(r'<div class="Caption"[^>]*>(.*?)</div>', text, re.DOTALL)
+            cap_match = re.search(r'<div class="Caption"[^>]*>(.*?)</div>', html, re.DOTALL)
             if cap_match:
                 clean_cap = re.sub('<[^<]+?>', '', cap_match.group(1)).strip()
                 if clean_cap:
                     caption = clean_cap.split('\n')[0][:50]
 
-            # Find all display_url entries in embedded JSON
-            display_urls = re.findall(r'"display_url"\s*:\s*"([^"]+)"', text)
-            if not display_urls:
-                display_urls = re.findall(r'"src"\s*:\s*"(https:[^"]+cdninstagram\.com[^"]+)"', text)
+            # Parse JSON structures embedded in script tags
+            json_matches = re.findall(r'(\{\"props\":.*?\"\}\}|\{\"context\":.*?\"\}\})', html)
+            for jm in json_matches:
+                try:
+                    pdata = json.loads(jm)
+                    media = pdata.get('shortcode_media') or pdata.get('graphql', {}).get('shortcode_media')
+                    if media:
+                        sidecar = media.get('edge_sidecar_to_children', {}).get('edges', [])
+                        if sidecar:
+                            media_list = []
+                            for it in sidecar:
+                                u = it.get('node', {}).get('display_url')
+                                if u:
+                                    cu = clean_url(u)
+                                    media_list.append({"download_url": cu, "preview_url": cu})
+                            if media_list:
+                                return {"title": caption, "media_list": media_list}
+                        elif media.get('display_url'):
+                            cu = clean_url(media['display_url'])
+                            return {"title": caption, "media_list": [{"download_url": cu, "preview_url": cu}]}
+                except Exception:
+                    continue
 
-            if not display_urls:
-                display_urls = re.findall(r'class="EmbeddedMediaImage"[^>]*src="([^"]+)"', text)
-
-            if display_urls:
-                cleaned = []
-                for u in display_urls:
-                    c = clean_cdn_url(u)
-                    if c and c not in cleaned and 's150x150' not in c and 's320x320' not in c:
-                        cleaned.append(c)
-
-                if cleaned:
-                    return {
-                        "title": caption,
-                        "media_list": [{"download_url": u, "preview_url": u} for u in cleaned]
-                    }
+            # Strict Fallback: Pick only the primary embedded post image
+            main_img_match = re.search(r'class="EmbeddedMediaImage"[^>]*src="([^"]+)"', html)
+            if main_img_match:
+                img_url = clean_url(main_img_match.group(1))
+                return {"title": caption, "media_list": [{"download_url": img_url, "preview_url": img_url}]}
     except Exception:
         pass
 
@@ -142,13 +155,13 @@ def fetch_media():
     if not url or 'instagram.com' not in url:
         return jsonify({"error": "Please provide a valid Instagram URL"}), 400
 
-    # 1. Photo Mode -> Try deep carousel scraper first
+    # 1. Exact Carousel / Photo extraction for Photo mode
     if mode == 'photo':
-        photo_res = extract_all_carousel_photos(url)
+        photo_res = extract_exact_post_photos(url)
         if photo_res and photo_res.get('media_list'):
             return jsonify(photo_res)
 
-    # 2. Video / Reels / Audio -> Use yt-dlp
+    # 2. Video / Reels / Audio extraction
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
@@ -162,7 +175,7 @@ def fetch_media():
             info = ydl.extract_info(url, download=False)
             
             if not info:
-                photo_res = extract_all_carousel_photos(url)
+                photo_res = extract_exact_post_photos(url)
                 if photo_res and photo_res.get('media_list'):
                     return jsonify(photo_res)
                 return jsonify({"error": "Unable to extract media. Please ensure post is public."}), 404
@@ -186,7 +199,7 @@ def fetch_media():
                     media_list.append({"download_url": dl_url, "preview_url": thumb})
 
             if not media_list:
-                photo_res = extract_all_carousel_photos(url)
+                photo_res = extract_exact_post_photos(url)
                 if photo_res and photo_res.get('media_list'):
                     return jsonify(photo_res)
                 return jsonify({"error": "No media stream available for this URL."}), 404
@@ -197,7 +210,7 @@ def fetch_media():
             })
 
     except Exception:
-        photo_res = extract_all_carousel_photos(url)
+        photo_res = extract_exact_post_photos(url)
         if photo_res and photo_res.get('media_list'):
             return jsonify(photo_res)
         return jsonify({"error": "Failed to fetch content. Please check if post is public."}), 500
