@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Save1M — Instagram Media Engine</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,7 +11,7 @@
   <style>
     :root {
       --bg-dark: #070a12;
-      --card-bg: rgba(19, 25, 41, 0.75);
+      --card-bg: rgba(19, 25, 41, 0.85);
       --card-inner: #0f1526;
       --accent-gradient: linear-gradient(135deg, #a855f7 0%, #ec4899 50%, #06b6d4 100%);
       --text-main: #f8fafc;
@@ -27,6 +27,13 @@
       font-family: 'Plus Jakarta Sans', sans-serif; 
     }
 
+    html, body {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden !important;
+      position: relative;
+    }
+
     body { 
       background-color: var(--bg-dark); 
       color: var(--text-main); 
@@ -34,13 +41,13 @@
       display: flex; 
       flex-direction: column; 
       align-items: center; 
-      overflow-x: hidden; 
     }
 
     .glow-sphere { 
       position: absolute; 
-      width: 550px; 
-      height: 550px; 
+      width: 100vw;
+      max-width: 500px; 
+      height: 400px; 
       background: radial-gradient(circle, rgba(168, 85, 247, 0.16), transparent 70%); 
       top: -70px; 
       left: 50%; 
@@ -54,26 +61,27 @@
     header { 
       width: 100%; 
       max-width: 1200px; 
-      padding: 24px 30px; 
+      padding: 18px 20px; 
       display: flex; 
       justify-content: space-between; 
       align-items: center; 
       position: relative; 
-      z-index: 1; 
+      z-index: 10; 
+      gap: 12px;
     }
 
     .brand-logo {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       text-decoration: none;
       cursor: pointer;
       user-select: none;
     }
 
     .brand-icon {
-      width: 38px;
-      height: 38px;
+      width: 36px;
+      height: 36px;
       background: linear-gradient(135deg, #1e1b4b, #3b0764);
       border: 1px solid rgba(236, 72, 153, 0.4);
       border-radius: 12px;
@@ -81,7 +89,8 @@
       align-items: center;
       justify-content: center;
       position: relative;
-      box-shadow: 0 0 20px rgba(168, 85, 247, 0.4), inset 0 0 12px rgba(236, 72, 153, 0.2);
+      box-shadow: 0 0 16px rgba(168, 85, 247, 0.4);
+      flex-shrink: 0;
     }
 
     .brand-text {
@@ -92,7 +101,7 @@
 
     .brand-title {
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 1.45rem;
+      font-size: 1.35rem;
       font-weight: 800;
       letter-spacing: 0.5px;
       color: #ffffff;
@@ -109,9 +118,9 @@
     }
 
     .brand-tag {
-      font-size: 0.62rem;
+      font-size: 0.58rem;
       font-weight: 700;
-      letter-spacing: 2px;
+      letter-spacing: 1.5px;
       text-transform: uppercase;
       color: #64748b;
       margin-top: 3px;
@@ -119,9 +128,9 @@
 
     .nav-tabs { 
       display: flex; 
-      gap: 8px; 
+      gap: 6px; 
       background: rgba(255, 255, 255, 0.05); 
-      padding: 6px; 
+      padding: 4px; 
       border-radius: 30px; 
       border: 1px solid var(--border-color); 
       backdrop-filter: blur(10px); 
@@ -131,15 +140,16 @@
       background: transparent; 
       border: none; 
       color: var(--text-muted); 
-      padding: 8px 18px; 
+      padding: 7px 14px; 
       border-radius: 20px; 
-      font-size: 0.9rem; 
+      font-size: 0.82rem; 
       font-weight: 600; 
       cursor: pointer; 
       display: flex; 
       align-items: center; 
-      gap: 6px; 
-      transition: all 0.3s ease; 
+      gap: 5px; 
+      transition: all 0.25s ease; 
+      white-space: nowrap;
     }
 
     .tab-btn:hover { color: #fff; }
@@ -154,7 +164,7 @@
       width: 100%; 
       max-width: 850px; 
       text-align: center; 
-      padding: 40px 20px 20px; 
+      padding: 24px 16px 16px; 
       position: relative; 
       z-index: 1; 
       display: flex; 
@@ -163,19 +173,21 @@
     }
 
     h1 { 
-      font-size: 2.9rem; 
+      font-size: 2.2rem; 
       font-weight: 800; 
-      margin-bottom: 12px; 
+      margin-bottom: 10px; 
       background: linear-gradient(180deg, #ffffff 40%, #a78bfa 100%); 
       -webkit-background-clip: text; 
       -webkit-text-fill-color: transparent; 
+      line-height: 1.2;
     }
 
     .subtitle { 
       color: var(--text-muted); 
-      font-size: 1.05rem; 
-      line-height: 1.6; 
-      margin-bottom: 35px; 
+      font-size: 0.95rem; 
+      line-height: 1.5; 
+      margin-bottom: 25px; 
+      padding: 0 10px;
     }
 
     .subtitle span { 
@@ -185,14 +197,14 @@
 
     .search-container { 
       width: 100%; 
-      max-width: 780px; 
+      max-width: 680px; 
       background: var(--card-bg); 
       border: 1px solid var(--border-color); 
       border-radius: 50px; 
-      padding: 8px 10px 8px 24px; 
+      padding: 6px 8px 6px 18px; 
       display: flex; 
       align-items: center; 
-      gap: 12px; 
+      gap: 8px; 
       box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); 
       backdrop-filter: blur(12px); 
       transition: border-color 0.3s, box-shadow 0.3s; 
@@ -200,37 +212,39 @@
 
     .search-container:focus-within { 
       border-color: #8b5cf6; 
-      box-shadow: 0 0 25px rgba(139, 92, 246, 0.4); 
+      box-shadow: 0 0 20px rgba(139, 92, 246, 0.4); 
     }
 
-    .search-icon { color: #6b7280; }
+    .search-icon { color: #6b7280; flex-shrink: 0; }
     .search-input { 
       flex: 1; 
       background: transparent; 
       border: none; 
       outline: none; 
       color: #fff; 
-      font-size: 1rem; 
+      font-size: 0.92rem; 
+      min-width: 0;
     }
 
-    .search-input::placeholder { color: #6b7280; }
+    .search-input::placeholder { color: #6b7280; font-size: 0.88rem; }
 
     .action-btn { 
       background: var(--accent-gradient); 
       border: none; 
       color: white; 
-      padding: 12px 28px; 
+      padding: 10px 22px; 
       border-radius: 40px; 
       font-weight: 600; 
-      font-size: 0.95rem; 
+      font-size: 0.9rem; 
       cursor: pointer; 
       display: flex; 
       align-items: center; 
-      gap: 8px; 
+      gap: 6px; 
+      flex-shrink: 0;
       transition: transform 0.2s; 
     }
 
-    .action-btn:hover { transform: scale(1.03); }
+    .action-btn:hover { transform: scale(1.02); }
     
     .spinner { 
       display: none; 
@@ -240,7 +254,7 @@
       border-radius: 50%; 
       border-top-color: #8b5cf6; 
       animation: spin 0.8s ease-in-out infinite; 
-      margin: 25px auto 0; 
+      margin: 20px auto 0; 
     }
 
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -248,37 +262,31 @@
     /* Multiple Photos Notification Notice */
     .multi-notice {
       display: none;
-      margin-top: 28px;
-      padding: 10px 22px;
+      margin-top: 20px;
+      padding: 8px 18px;
       background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.2));
       border: 1px solid rgba(236, 72, 153, 0.4);
       border-radius: 99px;
       color: #f3e8ff;
-      font-size: 0.92rem;
+      font-size: 0.85rem;
       font-weight: 600;
-      box-shadow: 0 0 25px rgba(168, 85, 247, 0.35);
-      animation: bouncePulse 2s infinite ease-in-out;
-    }
-
-    @keyframes bouncePulse {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-4px); }
+      box-shadow: 0 0 20px rgba(168, 85, 247, 0.35);
     }
 
     .results-grid {
       display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 30px;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
       width: 100%;
-      margin-top: 30px;
+      margin-top: 25px;
     }
 
     .result-card {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
       border-radius: 20px;
-      padding: 20px;
+      padding: 16px;
       text-align: center;
       animation: fadeIn 0.4s ease-out forwards;
       display: flex;
@@ -296,11 +304,11 @@
 
     .result-card img {
       width: 100%;
-      aspect-ratio: 9 / 16;
-      max-height: 560px;
+      height: auto;
+      max-height: 480px;
       object-fit: cover;
       border-radius: 14px;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       background: #1a2035;
       box-shadow: 0 4px 20px rgba(0,0,0,0.3);
     }
@@ -311,9 +319,9 @@
       background: #10b981;
       color: white;
       text-decoration: none;
-      padding: 14px 0;
+      padding: 13px 0;
       border-radius: 10px;
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 700;
       letter-spacing: 0.5px;
       transition: background 0.2s, transform 0.2s;
@@ -321,33 +329,32 @@
 
     .dl-final-btn:hover { 
       background: #059669; 
-      transform: translateY(-2px);
     }
 
-    .error-msg { color: #ef4444; font-size: 0.9rem; margin-top: 15px; }
+    .error-msg { color: #ef4444; font-size: 0.88rem; margin-top: 14px; padding: 0 10px; }
 
     .content-section {
       width: 100%;
       max-width: 1080px;
-      padding: 0 24px;
-      margin-top: 70px;
+      padding: 0 16px;
+      margin-top: 50px;
       position: relative;
       z-index: 1;
     }
 
     .steps-title { 
-      font-size: 1.85rem; 
+      font-size: 1.5rem; 
       font-weight: 700; 
       color: #fff; 
       text-align: center;
-      margin-bottom: 8px; 
+      margin-bottom: 6px; 
     }
 
     .steps-desc { 
       color: var(--text-muted); 
-      font-size: 0.95rem; 
+      font-size: 0.88rem; 
       text-align: center;
-      margin-bottom: 45px; 
+      margin-bottom: 30px; 
     }
 
     .steps-container { 
@@ -355,17 +362,8 @@
       display: flex; 
       justify-content: space-between; 
       align-items: flex-start; 
-    }
-
-    .steps-container::before { 
-      content: ''; 
-      position: absolute; 
-      top: 26px; 
-      left: 12%; 
-      right: 12%; 
-      height: 2px; 
-      background: linear-gradient(90deg, rgba(139, 92, 246, 0.4), rgba(236, 72, 153, 0.4)); 
-      z-index: 0; 
+      width: 100%;
+      gap: 16px;
     }
 
     .step-item { 
@@ -375,12 +373,12 @@
       flex-direction: column; 
       align-items: center; 
       text-align: center;
-      width: 28%; 
+      flex: 1; 
     }
 
     .step-number { 
-      width: 54px; 
-      height: 54px; 
+      width: 48px; 
+      height: 48px; 
       border-radius: 50%; 
       background: #131929; 
       border: 2px solid #8b5cf6; 
@@ -388,63 +386,64 @@
       display: flex; 
       align-items: center; 
       justify-content: center; 
-      font-size: 1.25rem; 
+      font-size: 1.15rem; 
       font-weight: 700; 
-      margin-bottom: 16px; 
+      margin-bottom: 12px; 
     }
 
     .step-text { 
       color: #d1d5db; 
-      font-size: 0.95rem; 
+      font-size: 0.88rem; 
+      line-height: 1.4;
     }
 
     .showcase-card {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
-      border-radius: 24px;
-      padding: 40px;
+      border-radius: 20px;
+      padding: 24px 18px;
       display: grid;
       grid-template-columns: 1.2fr 0.8fr;
-      gap: 40px;
+      gap: 28px;
       align-items: center;
       box-shadow: 0 12px 40px rgba(0,0,0,0.4);
     }
 
     .showcase-text h2 {
-      font-size: 2rem;
+      font-size: 1.6rem;
       font-weight: 800;
       color: #fff;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
 
     .showcase-text p {
       color: var(--text-muted);
-      line-height: 1.65;
-      font-size: 0.95rem;
-      margin-bottom: 24px;
+      line-height: 1.55;
+      font-size: 0.9rem;
+      margin-bottom: 18px;
     }
 
     .feature-points {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 18px 20px;
-      margin-bottom: 24px;
+      gap: 14px;
+      margin-bottom: 18px;
     }
 
     .point-item {
       display: flex;
       align-items: flex-start;
-      gap: 10px;
-      font-size: 0.88rem;
+      gap: 8px;
+      font-size: 0.85rem;
       color: #e5e7eb;
-      line-height: 1.45;
+      line-height: 1.4;
     }
 
     .point-icon {
       background: rgba(139, 92, 246, 0.2);
       color: #a78bfa;
       border-radius: 50%;
-      padding: 4px;
+      padding: 3px;
       flex-shrink: 0;
       margin-top: 2px;
     }
@@ -458,29 +457,24 @@
 
     .phone-mockup-wrapper {
       width: 100%;
-      max-width: 320px;
-      border-radius: 28px;
+      max-width: 280px;
+      border-radius: 22px;
       overflow: hidden;
       border: 1px solid rgba(236, 72, 153, 0.35);
-      box-shadow: 0 0 35px rgba(168, 85, 247, 0.35), 0 20px 40px rgba(0,0,0,0.6);
+      box-shadow: 0 0 25px rgba(168, 85, 247, 0.3);
       background: #11162a;
-      transition: transform 0.3s ease;
-    }
-
-    .phone-mockup-wrapper:hover {
-      transform: translateY(-4px);
     }
 
     .phone-mockup-wrapper img {
       width: 100%;
-      height: 380px;
+      height: 300px;
       object-fit: cover;
       display: block;
     }
 
     .phone-caption {
-      margin-top: 14px;
-      font-size: 0.88rem;
+      margin-top: 10px;
+      font-size: 0.82rem;
       color: #cbd5e1;
       text-align: center;
       font-weight: 500;
@@ -489,30 +483,24 @@
     .dual-cards-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 24px;
+      gap: 18px;
     }
 
     .info-card {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
-      border-radius: 20px;
-      padding: 24px;
+      border-radius: 18px;
+      padding: 18px;
       box-shadow: 0 8px 30px rgba(0,0,0,0.3);
-      transition: transform 0.2s, border-color 0.2s;
       overflow: hidden;
-    }
-
-    .info-card:hover {
-      transform: translateY(-3px);
-      border-color: var(--border-hover);
     }
 
     .card-banner {
       width: 100%;
-      height: 200px;
-      border-radius: 16px;
+      height: 150px;
+      border-radius: 14px;
       overflow: hidden;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
       border: 1px solid rgba(255,255,255,0.08);
       position: relative;
       background: #0d1224;
@@ -527,13 +515,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      position: relative;
-      overflow: hidden;
-      transition: transform 0.4s ease;
-    }
-
-    .info-card:hover .card-banner-art {
-      transform: scale(1.04);
     }
 
     .art-rocket-bg {
@@ -548,43 +529,40 @@
       background: rgba(255, 255, 255, 0.07);
       backdrop-filter: blur(12px);
       border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 18px;
-      padding: 16px 20px;
+      border-radius: 14px;
+      padding: 12px 16px;
       display: flex;
       align-items: center;
-      gap: 14px;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+      gap: 10px;
     }
 
     .format-pill {
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 12px;
-      padding: 10px 14px;
+      border-radius: 10px;
+      padding: 8px 12px;
       text-align: center;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       font-weight: 800;
-      letter-spacing: 0.5px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      gap: 3px;
     }
 
     .info-card h3 {
-      font-size: 1.3rem;
+      font-size: 1.15rem;
       font-weight: 700;
       color: #fff;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
     .info-card h3 span.dot {
-      width: 8px;
-      height: 8px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
       background: #8b5cf6;
       display: inline-block;
@@ -592,97 +570,95 @@
 
     .info-card p {
       color: var(--text-muted);
-      font-size: 0.92rem;
-      line-height: 1.6;
+      font-size: 0.88rem;
+      line-height: 1.5;
     }
 
     .why-banner {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
-      border-radius: 20px;
-      padding: 35px 30px;
+      border-radius: 18px;
+      padding: 24px 18px;
       text-align: center;
     }
 
     .why-banner h2 {
-      font-size: 1.8rem;
+      font-size: 1.5rem;
       font-weight: 700;
       color: #fff;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .why-banner p.main-desc {
       color: var(--text-muted);
-      font-size: 0.95rem;
-      max-width: 720px;
-      margin: 0 auto 20px;
-      line-height: 1.6;
+      font-size: 0.88rem;
+      line-height: 1.55;
+      margin-bottom: 16px;
     }
 
     .note-box {
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 12px;
-      padding: 12px 20px;
-      display: inline-block;
-      font-size: 0.88rem;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 0.82rem;
       color: #cbd5e1;
     }
 
     .faq-title {
-      font-size: 2.2rem;
+      font-size: 1.7rem;
       font-weight: 800;
       text-align: center;
       color: #fff;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .faq-sub {
       color: var(--text-muted);
-      font-size: 0.95rem;
+      font-size: 0.88rem;
       text-align: center;
-      margin-bottom: 40px;
+      margin-bottom: 25px;
     }
 
     .faq-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 20px;
+      gap: 14px;
     }
 
     .faq-item {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 24px;
+      border-radius: 14px;
+      padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
     }
 
     .faq-header {
       display: flex;
       align-items: flex-start;
-      gap: 10px;
+      gap: 8px;
     }
 
     .faq-badge {
-      width: 24px;
-      height: 24px;
+      width: 22px;
+      height: 22px;
       border-radius: 50%;
       background: rgba(139, 92, 246, 0.2);
       color: #c4b5fd;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.85rem;
+      font-size: 0.78rem;
       font-weight: 700;
       flex-shrink: 0;
-      margin-top: 2px;
+      margin-top: 1px;
     }
 
     .faq-item h4 {
-      font-size: 1.05rem;
+      font-size: 0.95rem;
       font-weight: 600;
       color: #fff;
       line-height: 1.35;
@@ -690,17 +666,17 @@
 
     .faq-item p {
       color: var(--text-muted);
-      font-size: 0.9rem;
-      line-height: 1.55;
-      padding-left: 34px;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      padding-left: 30px;
     }
 
     footer {
       width: 100%;
       background: #060911;
       border-top: 1px solid var(--border-color);
-      margin-top: 90px;
-      padding: 60px 24px 30px;
+      margin-top: 60px;
+      padding: 40px 16px 25px;
       position: relative;
       z-index: 1;
     }
@@ -710,39 +686,37 @@
       margin: 0 auto;
       display: grid;
       grid-template-columns: 1.4fr 1fr 1fr 1fr;
-      gap: 40px;
-      padding-bottom: 40px;
+      gap: 28px;
+      padding-bottom: 28px;
       border-bottom: 1px solid var(--border-color);
     }
 
     .footer-brand p {
       color: var(--text-muted);
-      font-size: 0.9rem;
-      line-height: 1.6;
-      margin-top: 14px;
-      max-width: 320px;
+      font-size: 0.85rem;
+      line-height: 1.55;
+      margin-top: 10px;
     }
 
     .footer-col h5 {
       color: #fff;
-      font-size: 0.95rem;
+      font-size: 0.88rem;
       font-weight: 700;
-      margin-bottom: 16px;
-      letter-spacing: 0.5px;
+      margin-bottom: 12px;
     }
 
     .footer-col ul {
       list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
     }
 
     .footer-col ul li a {
       color: var(--text-muted);
       text-decoration: none;
-      font-size: 0.88rem;
-      transition: color 0.2s;
+      font-size: 0.82rem;
+      cursor: pointer;
     }
 
     .footer-col ul li a:hover {
@@ -757,13 +731,13 @@
 
     .footer-bottom {
       max-width: 1100px;
-      margin: 30px auto 0;
+      margin: 20px auto 0;
       display: flex;
       flex-direction: column;
-      gap: 14px;
-      font-size: 0.82rem;
+      gap: 10px;
+      font-size: 0.78rem;
       color: #64748b;
-      line-height: 1.6;
+      line-height: 1.5;
     }
 
     .footer-copy {
@@ -771,12 +745,13 @@
       justify-content: space-between;
       align-items: center;
       margin-top: 6px;
+      flex-wrap: wrap;
+      gap: 8px;
     }
 
     .engineer-credit {
       color: #94a3b8;
       font-weight: 500;
-      letter-spacing: 0.3px;
     }
 
     .engineer-credit span {
@@ -784,16 +759,82 @@
       font-weight: 700;
     }
 
-    @media (max-width: 860px) {
-      .showcase-card { grid-template-columns: 1fr; }
-      .dual-cards-grid { grid-template-columns: 1fr; }
-      .faq-grid { grid-template-columns: 1fr; }
-      .footer-inner { grid-template-columns: 1fr 1fr; }
-      .steps-container { flex-direction: column; align-items: center; gap: 30px; }
-      .steps-container::before { display: none; }
-      .step-item { width: 100%; }
-      .feature-points { grid-template-columns: 1fr; }
-      .footer-copy { flex-direction: column; gap: 8px; text-align: center; }
+    /* Mobile Perfection Media Query */
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        align-items: center;
+        padding: 16px 12px;
+        gap: 14px;
+      }
+      .nav-tabs {
+        width: 100%;
+        max-width: 340px;
+        justify-content: space-between;
+      }
+      .tab-btn {
+        flex: 1;
+        justify-content: center;
+        padding: 7px 10px;
+        font-size: 0.8rem;
+      }
+      main {
+        padding: 16px 12px;
+      }
+      h1 {
+        font-size: 1.65rem;
+      }
+      .subtitle {
+        font-size: 0.85rem;
+        margin-bottom: 20px;
+      }
+      .search-container {
+        padding: 4px 6px 4px 14px;
+        gap: 6px;
+      }
+      .action-btn {
+        padding: 8px 16px;
+        font-size: 0.82rem;
+      }
+      .content-section {
+        padding: 0 12px;
+        margin-top: 40px;
+      }
+      .steps-container { 
+        flex-direction: column; 
+        align-items: center; 
+        gap: 20px; 
+      }
+      .step-item { 
+        width: 100%; 
+        max-width: 280px;
+      }
+      .showcase-card { 
+        grid-template-columns: 1fr; 
+        padding: 20px 14px;
+      }
+      .feature-points { 
+        grid-template-columns: 1fr; 
+        gap: 10px;
+      }
+      .dual-cards-grid { 
+        grid-template-columns: 1fr; 
+      }
+      .faq-grid { 
+        grid-template-columns: 1fr; 
+      }
+      .footer-inner { 
+        grid-template-columns: 1fr 1fr; 
+        gap: 24px;
+      }
+      .footer-brand {
+        grid-column: span 2;
+      }
+      .footer-copy { 
+        flex-direction: column; 
+        gap: 8px; 
+        text-align: center; 
+      }
     }
   </style>
 </head>
@@ -802,9 +843,9 @@
   <div class="glow-sphere"></div>
 
   <header>
-    <div class="brand-logo">
+    <div class="brand-logo" onclick="switchTab('video', document.querySelectorAll('.tab-btn')[0])">
       <div class="brand-icon">
-        <i data-lucide="zap" size="20" style="color: #f472b6;"></i>
+        <i data-lucide="zap" size="18" style="color: #f472b6;"></i>
       </div>
       <div class="brand-text">
         <div class="brand-title">SAVE<span class="highlight">1M</span></div>
@@ -812,10 +853,11 @@
       </div>
     </div>
 
+    <!-- 3 Core Navigation Tabs -->
     <nav class="nav-tabs">
-      <button class="tab-btn active" onclick="switchTab('video', this)"><i data-lucide="video" size="16"></i> Video</button>
-      <button class="tab-btn" onclick="switchTab('audio', this)"><i data-lucide="music" size="16"></i> Audio</button>
-      <button class="tab-btn" onclick="switchTab('photo', this)"><i data-lucide="image" size="16"></i> Photo</button>
+      <button class="tab-btn active" onclick="switchTab('video', this)"><i data-lucide="video" size="14"></i> Video</button>
+      <button class="tab-btn" onclick="switchTab('audio', this)"><i data-lucide="music" size="14"></i> Audio</button>
+      <button class="tab-btn" onclick="switchTab('photo', this)"><i data-lucide="image" size="14"></i> Photo</button>
     </nav>
   </header>
 
@@ -827,10 +869,10 @@
     </p>
 
     <div class="search-container">
-      <i data-lucide="link" class="search-icon" size="20"></i>
-      <input type="text" id="instaUrl" class="search-input" placeholder="Paste Link Here..." />
+      <i data-lucide="link" class="search-icon" size="18"></i>
+      <input type="text" id="instaUrl" class="search-input" placeholder="Paste Link Here..." autocomplete="off" />
       <button class="action-btn" id="mainBtn" onclick="handleButtonClick()">
-        <i data-lucide="clipboard" size="16" id="btnIcon"></i>
+        <i data-lucide="clipboard" size="14" id="btnIcon"></i>
         <span id="btnText">Paste</span>
       </button>
     </div>
@@ -838,11 +880,14 @@
     <div class="spinner" id="loader"></div>
     <div id="errorText" class="error-msg"></div>
 
+    <!-- Multiple Photos Scroll Indicator -->
     <div id="multiNotice" class="multi-notice"></div>
 
+    <!-- Media Results Container -->
     <div class="results-grid" id="resultsGrid"></div>
   </main>
 
+  <!-- 1. Steps Section -->
   <section class="content-section">
     <h2 class="steps-title" id="stepsTitle">Steps to Download Reels From Instagram</h2>
     <p class="steps-desc">Here’s a quick and easy way to do it:</p>
@@ -853,6 +898,7 @@
     </div>
   </section>
 
+  <!-- 2. How Instagram Downloader Works Section -->
   <section class="content-section">
     <div class="showcase-card">
       <div class="showcase-text">
@@ -861,88 +907,91 @@
         
         <div class="feature-points">
           <div class="point-item">
-            <i data-lucide="check" size="14" class="point-icon"></i>
-            <span><strong>Original quality without watermark</strong> or logo, which most of the tools out there can't.</span>
+            <i data-lucide="check" size="13" class="point-icon"></i>
+            <span><strong>Original quality without watermark</strong> or logo.</span>
           </div>
           <div class="point-item">
-            <i data-lucide="check" size="14" class="point-icon"></i>
-            <span><strong>Download Reels video in gallery</strong> on any device that you want: mobile, iPhone, iPad, PC, or tablet.</span>
+            <i data-lucide="check" size="13" class="point-icon"></i>
+            <span><strong>Download Reels video in gallery</strong> on mobile, PC, or tablet.</span>
           </div>
           <div class="point-item">
-            <i data-lucide="check" size="14" class="point-icon"></i>
-            <span><strong>Download online by link</strong> using your browser without installing any heavy app or software.</span>
+            <i data-lucide="check" size="13" class="point-icon"></i>
+            <span><strong>Download online by link</strong> without installing any heavy app.</span>
           </div>
           <div class="point-item">
-            <i data-lucide="check" size="14" class="point-icon"></i>
-            <span><strong>It's always 100% free</strong>. Clean, super-fast and accessible directly on all modern web browsers.</span>
+            <i data-lucide="check" size="13" class="point-icon"></i>
+            <span><strong>It's always 100% free</strong>, clean and super-fast.</span>
           </div>
         </div>
 
-        <p style="font-size: 0.86rem; color: #94a3b8;">We do not require any personal information or passwords to access our tool. This is a lifetime free service designed to download unlimited amounts of Instagram reels, photos, and audio.</p>
+        <p style="font-size: 0.82rem; color: #94a3b8;">We do not require any personal information or passwords. This is a lifetime free service.</p>
       </div>
 
       <div class="showcase-visual">
         <div class="phone-mockup-wrapper">
-          <img src="https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?q=80&w=800&auto=format&fit=crop" alt="Instagram 3D Aesthetic Preview" />
+          <img src="https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?q=80&w=800&auto=format&fit=crop" alt="Instagram Preview" />
         </div>
         <div class="phone-caption">Save reels instantly with no watermark</div>
       </div>
     </div>
   </section>
 
+  <!-- 3. Dual Feature Cards -->
   <section class="content-section">
     <div class="dual-cards-grid">
       <div class="info-card">
         <div class="card-banner">
           <div class="card-banner-art art-rocket-bg">
             <div class="floating-glass-box">
-              <i data-lucide="rocket" size="44" style="color: #f472b6; filter: drop-shadow(0 0 15px rgba(236,72,153,0.8));"></i>
+              <i data-lucide="rocket" size="36" style="color: #f472b6;"></i>
               <div>
-                <div style="font-size: 0.85rem; font-weight: 800; color: #fff;">HYPER FAST</div>
-                <div style="font-size: 0.75rem; color: #c084fc;">Real-Time Stream</div>
+                <div style="font-size: 0.82rem; font-weight: 800; color: #fff;">HYPER FAST</div>
+                <div style="font-size: 0.72rem; color: #c084fc;">Real-Time Stream</div>
               </div>
             </div>
           </div>
         </div>
         <h3><span class="dot"></span> Reels Downloader</h3>
-        <p>Our Instagram reels viewer and downloader allows users to download Instagram reels video fast and free; it just takes a few seconds to fetch video from link and directly download it into gallery of your device. It is a super-fast tool built for speed.</p>
+        <p>Our Instagram reels viewer and downloader allows users to download Instagram reels video fast and free directly into device gallery.</p>
       </div>
 
       <div class="info-card">
         <div class="card-banner">
           <div class="card-banner-art art-format-bg">
-            <div style="display: flex; gap: 12px; align-items: center;">
+            <div style="display: flex; gap: 10px; align-items: center;">
               <div class="format-pill" style="color: #38bdf8;">
-                <i data-lucide="video" size="20"></i>
+                <i data-lucide="video" size="18"></i>
                 <span>MP4</span>
               </div>
-              <div class="format-pill" style="color: #ec4899; transform: scale(1.1); background: rgba(236,72,153,0.15); border-color: rgba(236,72,153,0.4);">
-                <i data-lucide="camera" size="22"></i>
+              <div class="format-pill" style="color: #ec4899; background: rgba(236,72,153,0.15); border-color: rgba(236,72,153,0.4);">
+                <i data-lucide="camera" size="18"></i>
                 <span>JPG</span>
               </div>
               <div class="format-pill" style="color: #a855f7;">
-                <i data-lucide="music" size="20"></i>
+                <i data-lucide="music" size="18"></i>
                 <span>MP3</span>
               </div>
             </div>
           </div>
         </div>
         <h3><span class="dot" style="background:#ec4899;"></span> Content Formats</h3>
-        <p>Instagram doesn't allow downloading reels or media directly. Save1M helps you fetch highest original quality <strong>MP4</strong>, <strong>JPG</strong>, or <strong>MP3</strong> audio formats with a single click.</p>
+        <p>Save1M helps you fetch highest original quality <strong>MP4</strong>, <strong>JPG</strong>, or <strong>MP3</strong> audio formats with a single click.</p>
       </div>
     </div>
   </section>
 
+  <!-- 4. Why Use Section -->
   <section class="content-section">
     <div class="why-banner">
       <h2>Why use Save1M?</h2>
-      <p class="main-desc">As Instagram doesn't allow to download reels directly from the app or website online, here <strong>Save1M</strong> web based tool helps you to do that in high quality formats effortlessly.</p>
+      <p class="main-desc">Save1M web based tool helps you to download Instagram reels, photos & audio in original high quality formats effortlessly.</p>
       <div class="note-box">
-        <strong>Note:</strong> Downloaded video/audio cannot be used for commercial purposes without original creator consent.
+        <strong>Note:</strong> Downloaded media cannot be used for commercial purposes without creator consent.
       </div>
     </div>
   </section>
 
+  <!-- 5. FAQ Section -->
   <section class="content-section">
     <h2 class="faq-title">Frequently Asked Questions</h2>
     <p class="faq-sub">Everything you need to know about Save1M</p>
@@ -950,104 +999,74 @@
     <div class="faq-grid">
       <div class="faq-item">
         <div class="faq-header"><div class="faq-badge">?</div><h4>Is Save1M free to use?</h4></div>
-        <p>Yes, Save1M is a 100% free online tool. You can download as many videos and reels as you want without any subscription or hidden costs.</p>
+        <p>Yes, Save1M is a 100% free online tool with unlimited downloads.</p>
       </div>
 
       <div class="faq-item">
-        <div class="faq-header"><div class="faq-badge">?</div><h4>Do I need to install any software or app?</h4></div>
-        <p>No, you don't need to install anything. Save1M is a web-based tool that works directly in your browser on mobile, tablet, and desktop.</p>
+        <div class="faq-header"><div class="faq-badge">?</div><h4>Do I need to install any software?</h4></div>
+        <p>No, Save1M works directly in your web browser on mobile and desktop.</p>
       </div>
 
       <div class="faq-item">
-        <div class="faq-header"><div class="faq-badge">?</div><h4>What is the quality of the downloaded videos?</h4></div>
-        <p>We fetch the media in its original high quality. If the source video is in 1080p or 4K, our tool will provide the download link for that same resolution.</p>
+        <div class="faq-header"><div class="faq-badge">?</div><h4>What is the video quality?</h4></div>
+        <p>We fetch the media in its original highest available resolution (HD / 1080p).</p>
       </div>
 
       <div class="faq-item">
-        <div class="faq-header"><div class="faq-badge">?</div><h4>Can I download content from private accounts?</h4></div>
-        <p>For security and privacy reasons, our tool only supports downloading content from public Instagram accounts.</p>
-      </div>
-
-      <div class="faq-item">
-        <div class="faq-header"><div class="faq-badge">?</div><h4>Where are the downloaded files saved?</h4></div>
-        <p>By default, files are saved in your device's 'Downloads' folder. On mobile devices, they are usually saved directly to your Gallery or Photos app.</p>
-      </div>
-
-      <div class="faq-item">
-        <div class="faq-header"><div class="faq-badge">?</div><h4>Do I need to provide my Instagram login details?</h4></div>
-        <p>No, you never need to provide your Instagram username or password. Save1M works without requiring any personal credentials.</p>
-      </div>
-
-      <div class="faq-item">
-        <div class="faq-header"><div class="faq-badge">?</div><h4>Is there any limit to how many reels I can download?</h4></div>
-        <p>No, there are absolutely no limits. You can download an unlimited number of Instagram videos, reels, photos, and audio files for free.</p>
-      </div>
-
-      <div class="faq-item">
-        <div class="faq-header"><div class="faq-badge">?</div><h4>Do you store my downloaded videos?</h4></div>
-        <p>No, we do not store any of your downloaded videos. All downloads are processed in real-time and served directly from Instagram servers.</p>
-      </div>
-
-      <div class="faq-item">
-        <div class="faq-header"><div class="faq-badge">?</div><h4>Does Save1M work on Android & iOS?</h4></div>
-        <p>Yes, our website is fully responsive and works seamlessly across Android, iPhone, iPad, macOS, and Windows browsers.</p>
-      </div>
-
-      <div class="faq-item">
-        <div class="faq-header"><div class="faq-badge">?</div><h4>Can I download videos without the Instagram app?</h4></div>
-        <p>Yes, Save1M works entirely in your web browser without requiring the official Instagram app installed.</p>
+        <div class="faq-header"><div class="faq-badge">?</div><h4>Where are downloaded files saved?</h4></div>
+        <p>On mobile phones, files save directly to your Gallery or Photos app.</p>
       </div>
     </div>
   </section>
 
+  <!-- 6. Footer -->
   <footer>
     <div class="footer-inner">
       <div class="footer-brand">
         <div class="brand-logo">
           <div class="brand-icon">
-            <i data-lucide="zap" size="18" style="color: #f472b6;"></i>
+            <i data-lucide="zap" size="16" style="color: #f472b6;"></i>
           </div>
           <div class="brand-text">
-            <div class="brand-title" style="font-size: 1.25rem;">SAVE<span class="highlight">1M</span></div>
+            <div class="brand-title" style="font-size: 1.15rem;">SAVE<span class="highlight">1M</span></div>
             <div class="brand-tag">ULTRA HD ENGINE</div>
           </div>
         </div>
-        <p>Save1M is a super-fast web based tool to download Instagram reels, videos, photos, and audio in original quality — simple, fast, and free.</p>
+        <p>Fastest tool to download Instagram reels, photos & audio.</p>
       </div>
 
       <div class="footer-col">
         <h5>TOOLS</h5>
         <ul>
-          <li><a href="#" onclick="switchTab('video', document.querySelectorAll('.tab-btn')[0])">Reels Downloader</a></li>
-          <li><a href="#" onclick="switchTab('video', document.querySelectorAll('.tab-btn')[0])">Video Downloader</a></li>
-          <li><a href="#" onclick="switchTab('photo', document.querySelectorAll('.tab-btn')[2])">Photo Downloader</a></li>
-          <li><a href="#" onclick="switchTab('audio', document.querySelectorAll('.tab-btn')[1])">Audio Downloader</a></li>
+          <li><a onclick="switchTab('video', document.querySelectorAll('.tab-btn')[0])">Reels Downloader</a></li>
+          <li><a onclick="switchTab('photo', document.querySelectorAll('.tab-btn')[2])">Photo Downloader</a></li>
+          <li><a onclick="switchTab('audio', document.querySelectorAll('.tab-btn')[1])">Audio Downloader</a></li>
         </ul>
       </div>
 
       <div class="footer-col">
         <h5>LEGAL</h5>
         <ul>
-          <li><a href="#">Privacy Policy</a></li>
-          <li><a href="#">Terms of Service</a></li>
-          <li><a href="#">DMCA Disclaimer</a></li>
+          <li><a>Privacy Policy</a></li>
+          <li><a>Terms of Service</a></li>
+          <li><a>DMCA Disclaimer</a></li>
         </ul>
       </div>
 
       <div class="footer-col">
         <h5>SUPPORT</h5>
         <ul>
-          <li><a href="mailto:abhaykumarverma1425@gmail.com"><i data-lucide="mail" size="14" style="vertical-align: middle; margin-right: 4px;"></i> Contact Us</a></li>
+          <li><a href="mailto:abhaykumarverma1425@gmail.com"><i data-lucide="mail" size="13" style="vertical-align: middle; margin-right: 3px;"></i> Contact Us</a></li>
           <li><a href="mailto:abhaykumarverma1425@gmail.com" class="support-email-link">abhaykumarverma1425@gmail.com</a></li>
         </ul>
       </div>
     </div>
 
     <div class="footer-bottom">
-      <p><strong>Save1M</strong> is not connected to Instagram™ or Meta. We do not host or store files on our servers; all content belongs to its original owners. Please do not use our tool for copyrighted or restricted content.</p>
+      <p>Save1M is not affiliated with Instagram™ or Meta. All content belongs to respective owners.</p>
       <div class="footer-copy">
         <span>© 2026 Save1M – All Rights Reserved.</span>
-        <div class="engineer-credit">Designed and engineered by <span>Abhay Kumar Verma</span>.</div>
+        <div class="engineer-credit">Designed & engineered by <span>Abhay Kumar Verma</span>.</div>
       </div>
     </div>
   </footer>
@@ -1063,10 +1082,9 @@
     const errorText = document.getElementById('errorText');
     const multiNotice = document.getElementById('multiNotice');
 
-    // Live Render Server URL
     const API_BASE = 'https://save1m.onrender.com';
 
-    function smoothScrollTo(targetY, duration = 1800) {
+    function smoothScrollTo(targetY, duration = 1500) {
       const startY = window.pageYOffset;
       const diff = targetY - startY;
       let startTime = null;
@@ -1074,25 +1092,17 @@
       function step(currentTime) {
         if (!startTime) startTime = currentTime;
         const progress = Math.min((currentTime - startTime) / duration, 1);
-        
-        const ease = progress < 0.5 
-          ? 2 * progress * progress 
-          : -1 + (4 - 2 * progress) * progress;
-
+        const ease = progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
         window.scrollTo(0, startY + diff * ease);
-
-        if (progress < 1) {
-          requestAnimationFrame(step);
-        }
+        if (progress < 1) requestAnimationFrame(step);
       }
-
       requestAnimationFrame(step);
     }
 
     function switchTab(mode, element) {
       currentMode = mode;
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      element.classList.add('active');
+      if (element) element.classList.add('active');
 
       const title = document.getElementById('headingTitle');
       const desc = document.getElementById('headingDesc');
@@ -1122,25 +1132,33 @@
     });
 
     async function handleButtonClick() {
-      if (!input.value.trim()) {
-        try {
-          const clipText = await navigator.clipboard.readText();
-          if (clipText) {
-            input.value = clipText;
-            btnText.innerText = "Download";
-            btnIcon.setAttribute('data-lucide', 'download');
-            lucide.createIcons();
-            fetchMedia(clipText);
-          }
-        } catch (err) {
-          alert('Please allow clipboard access or type/paste the link manually.');
+      const val = input.value.trim();
+      if (!val) {
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          try {
+            const clipText = await navigator.clipboard.readText();
+            if (clipText && clipText.includes('instagram.com')) {
+              input.value = clipText;
+              btnText.innerText = "Download";
+              btnIcon.setAttribute('data-lucide', 'download');
+              lucide.createIcons();
+              fetchMedia(clipText);
+              return;
+            }
+          } catch (e) {}
         }
+        input.focus();
       } else {
-        fetchMedia(input.value.trim());
+        fetchMedia(val);
       }
     }
 
     async function fetchMedia(url) {
+      if (!url.includes('instagram.com')) {
+        errorText.innerText = 'Please enter a valid Instagram link.';
+        return;
+      }
+
       errorText.innerText = '';
       resultsGrid.innerHTML = '';
       multiNotice.style.display = 'none';
@@ -1158,7 +1176,7 @@
 
         if (data.media_list && data.media_list.length > 0) {
           if (data.media_list.length > 1) {
-            multiNotice.innerText = `✨ Found ${data.media_list.length} Photos • Scrolling gently to show all photos ↓`;
+            multiNotice.innerText = `✨ Found ${data.media_list.length} Items • Swipe down to view ↓`;
             multiNotice.style.display = 'inline-block';
           }
 
@@ -1180,30 +1198,29 @@
 
             card.innerHTML = `
               <img src="${previewUrl}" alt="Media Preview" onerror="this.src='https://via.placeholder.com/400x600?text=Preview+Unavailable'" />
-              <p style="font-size: 0.95rem; font-weight: 500; margin-bottom: 14px; color: #d1d5db;">${data.title}${countLabel}</p>
+              <p style="font-size: 0.9rem; font-weight: 500; margin-bottom: 12px; color: #d1d5db;">${data.title}${countLabel}</p>
               <a href="${downloadUrl}" class="dl-final-btn">Download ${currentMode.toUpperCase()}${countLabel}</a>
             `;
             resultsGrid.appendChild(card);
             lastCard = card;
           });
 
-          // Calm, Controlled Slow Scroll
           setTimeout(() => {
             if (lastCard && data.media_list.length > 1) {
-              const targetPosition = lastCard.getBoundingClientRect().bottom + window.pageYOffset - window.innerHeight + 60;
-              smoothScrollTo(targetPosition, 2200);
+              const targetPosition = lastCard.getBoundingClientRect().bottom + window.pageYOffset - window.innerHeight + 40;
+              smoothScrollTo(targetPosition, 1800);
             } else if (lastCard) {
-              const targetPosition = resultsGrid.getBoundingClientRect().top + window.pageYOffset - 80;
-              smoothScrollTo(targetPosition, 1200);
+              const targetPosition = resultsGrid.getBoundingClientRect().top + window.pageYOffset - 60;
+              smoothScrollTo(targetPosition, 1000);
             }
           }, 300);
 
         } else {
-          errorText.innerText = data.error || 'Failed to fetch media. Please check the URL.';
+          errorText.innerText = data.error || 'Failed to fetch media. Please check if account is public.';
         }
       } catch (err) {
         loader.style.display = 'none';
-        errorText.innerText = 'Server is starting up (~25s on first load). Please tap Download again!';
+        errorText.innerText = 'Server waking up (~25s on first load). Please tap Download again!';
       }
     }
   </script>
