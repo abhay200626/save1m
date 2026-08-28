@@ -1,13 +1,32 @@
+import os
+import re
+import requests
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 import instaloader
 import yt_dlp
-import requests
-import re
-import os
 
 app = Flask(__name__)
 CORS(app)
+
+VISITOR_FILE = "visitor_count.txt"
+
+def get_visitor_count():
+    base_count = 50
+    if not os.path.exists(VISITOR_FILE):
+        with open(VISITOR_FILE, "w", encoding="utf-8") as f:
+            f.write(str(base_count))
+        return base_count
+    try:
+        with open(VISITOR_FILE, "r", encoding="utf-8") as f:
+            content = f.read().strip()
+            count = int(content) if content else base_count
+        count += 1
+        with open(VISITOR_FILE, "w", encoding="utf-8") as f:
+            f.write(str(count))
+        return count
+    except Exception:
+        return base_count
 
 # Instaloader configuration
 L = instaloader.Instaloader(
@@ -27,6 +46,13 @@ HEADERS = {
 def extract_shortcode(url):
     match = re.search(r'instagram\.com/(?:p|reel|tv)/([^/?#&]+)', url)
     return match.group(1) if match else None
+
+def clean_caption_title(text):
+    if not text:
+        return "Instagram_Media"
+    clean = re.sub(r'[^\w\s-]', '', text).strip()
+    clean = re.sub(r'[-\s]+', '_', clean)
+    return clean[:45] if clean else "Instagram_Media"
 
 def get_photos_via_instaloader(url):
     try:
@@ -53,7 +79,8 @@ def get_photos_via_instaloader(url):
                 "is_video": post.is_video
             })
             
-        return media_list, post.caption
+        caption = post.caption or post.owner_username or "Instagram_Media"
+        return media_list, clean_caption_title(caption)
     except Exception as e:
         print("Instaloader Error:", e)
     return None, None
@@ -70,7 +97,8 @@ def get_media_ytdlp(url, mode='video'):
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
-        title = info.get('title', 'Instagram Media')
+        raw_title = info.get('description') or info.get('title') or info.get('uploader') or 'Instagram_Media'
+        title = clean_caption_title(raw_title)
         thumbnail = info.get('thumbnail')
         media_url = None
 
@@ -100,6 +128,11 @@ def get_media_ytdlp(url, mode='video'):
 def home():
     return jsonify({"status": "Save1M Engine Online"}), 200
 
+@app.route('/api/visitors', methods=['GET'])
+def visitor_tracker():
+    count = get_visitor_count()
+    return jsonify({"count": count})
+
 @app.route('/download', methods=['POST'])
 def get_media():
     data = request.json or {}
@@ -114,7 +147,7 @@ def get_media():
         media_list, caption = get_photos_via_instaloader(url)
         if media_list:
             return jsonify({
-                "title": caption[:60] if caption else "Instagram Photos",
+                "title": caption,
                 "media_list": media_list,
                 "mode": "photo"
             })
@@ -125,7 +158,7 @@ def get_media():
             media_list, title = get_media_ytdlp(url, mode)
             if media_list and media_list[0]['download_url']:
                 return jsonify({
-                    "title": title or "Instagram Media",
+                    "title": title,
                     "media_list": media_list,
                     "mode": mode
                 })
@@ -136,7 +169,7 @@ def get_media():
     media_list, caption = get_photos_via_instaloader(url)
     if media_list:
         return jsonify({
-            "title": caption[:60] if caption else f"Instagram {mode.capitalize()}",
+            "title": caption,
             "media_list": media_list,
             "mode": mode
         })
@@ -159,16 +192,25 @@ def proxy_image():
 @app.route('/proxy-download')
 def proxy_download():
     media_url = request.args.get('url')
-    filename = request.args.get('filename', 'media_file.mp4')
+    filename = request.args.get('filename', 'Save1M_Media.mp4')
     
     if not media_url:
         return "Missing URL", 400
 
     try:
         r = requests.get(media_url, headers=HEADERS, stream=True, timeout=25)
+        content_type = r.headers.get('content-type', 'application/octet-stream')
+        
+        if filename.endswith('.jpg') or filename.endswith('.jpeg'):
+            content_type = 'image/jpeg'
+        elif filename.endswith('.mp4'):
+            content_type = 'video/mp4'
+        elif filename.endswith('.mp3'):
+            content_type = 'audio/mpeg'
+
         return Response(
             r.iter_content(chunk_size=65536),
-            content_type=r.headers.get('content-type', 'application/octet-stream'),
+            content_type=content_type,
             headers={'Content-Disposition': f'attachment; filename="{filename}"'}
         )
     except Exception as e:
