@@ -1,277 +1,170 @@
-import os
-import re
-import json
-import html
-import requests
-from urllib.parse import unquote
-from flask import Flask, request, jsonify, Response, stream_with_context
+from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
+import instaloader
 import yt_dlp
+import requests
+import re
 
 app = Flask(__name__)
 CORS(app)
 
-VISITOR_FILE = "visitor_count.txt"
+# Instaloader configuration
+L = instaloader.Instaloader(
+    download_pictures=False,
+    download_videos=False, 
+    download_video_thumbnails=False,
+    save_metadata=False,
+    quiet=True
+)
 
-def get_visitor_count():
-    base_count = 50
-    if not os.path.exists(VISITOR_FILE):
-        with open(VISITOR_FILE, "w", encoding="utf-8") as f:
-            f.write(str(base_count))
-        return base_count
-    try:
-        with open(VISITOR_FILE, "r", encoding="utf-8") as f:
-            content = f.read().strip()
-            count = int(content) if content else base_count
-        count += 1
-        with open(VISITOR_FILE, "w", encoding="utf-8") as f:
-            f.write(str(count))
-        return count
-    except Exception:
-        return base_count
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+    'Accept': '*/*',
+    'Accept-Language': 'en-US,en;q=0.9',
+}
 
-@app.route('/', methods=['GET'])
-def health_check():
-    return jsonify({"status": "Save1M Engine Online & Active"}), 200
-
-@app.route('/api/visitors', methods=['GET'])
-def visitor_tracker():
-    count = get_visitor_count()
-    return jsonify({"count": count})
-
-def get_shortcode(url):
-    match = re.search(r'/(?:p|reel|reels|tv)/([A-Za-z0-9_-]+)', url)
+def extract_shortcode(url):
+    match = re.search(r'instagram\.com/(?:p|reel|tv)/([^/?#&]+)', url)
     return match.group(1) if match else None
 
-def fix_media_url(raw_url):
-    """Accurately restores Instagram CDN signed URLs without breaking tokens"""
-    if not raw_url:
-        return None
-    url = raw_url.replace('\\u0026', '&').replace('&amp;', '&').replace('\\/', '/')
-    url = html.unescape(url)
-    return url
-
-def extract_instagram_all_media(url, mode='video'):
-    shortcode = get_shortcode(url)
-    if not shortcode:
-        return None
-
-    clean_url_base = f"https://www.instagram.com/p/{shortcode}/"
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Referer': clean_url_base,
-    }
-
-    # 1. Embed Page Parsing (Direct CDN Stream)
+def get_photos_via_instaloader(url):
     try:
-        embed_url = f"https://www.instagram.com/p/{shortcode}/embed/captioned/"
-        r = requests.get(embed_url, headers=headers, timeout=10)
-        if r.status_code == 200:
-            text = r.text
+        shortcode = extract_shortcode(url)
+        if not shortcode:
+            return None, None
+        
+        post = instaloader.Post.from_shortcode(L.context, shortcode)
+        media_list = []
+        
+        # Carousel / Multiple photos post
+        if post.typename == 'GraphSidecar':
+            for node in post.get_sidecar_nodes():
+                media_list.append({
+                    "preview_url": node.display_url,
+                    "download_url": node.video_url if node.is_video else node.display_url,
+                    "is_video": node.is_video
+                })
+        # Single photo / video
+        else:
+            media_list.append({
+                "preview_url": post.url,
+                "download_url": post.video_url if post.is_video else post.url,
+                "is_video": post.is_video
+            })
             
-            caption = "Instagram_Media"
-            cap_match = re.search(r'<div class="Caption"[^>]*>(.*?)</div>', text, re.DOTALL)
-            if cap_match:
-                clean_cap = re.sub('<[^<]+?>', '', cap_match.group(1)).strip()
-                if clean_cap:
-                    caption = clean_cap.split('\n')[0][:50]
+        return media_list, post.caption
+    except Exception as e:
+        print("Instaloader Error:", e)
+    return None, None
 
-            # Video / Reel
-            if mode in ['video', 'audio']:
-                video_matches = re.findall(r'"video_url"\s*:\s*"([^"]+)"', text)
-                if not video_matches:
-                    video_matches = re.findall(r'src="(https:[^"]+cdninstagram\.com[^"]+\.mp4[^"]*)"', text)
-                if not video_matches:
-                    video_matches = re.findall(r'class="EmbeddedMediaVideo"[^>]*src="([^"]+)"', text)
-
-                if video_matches:
-                    vid_url = fix_media_url(video_matches[0])
-                    thumb_match = re.search(r'class="EmbeddedMediaImage"[^>]*src="([^"]+)"', text)
-                    thumb_url = fix_media_url(thumb_match.group(1)) if thumb_match else vid_url
-                    return {
-                        "title": caption,
-                        "media_list": [{"download_url": vid_url, "preview_url": thumb_url}]
-                    }
-
-            # Photos
-            if mode == 'photo':
-                photo_matches = re.findall(r'"display_url"\s*:\s*"([^"]+)"', text)
-                if not photo_matches:
-                    photo_matches = re.findall(r'class="EmbeddedMediaImage"[^>]*src="([^"]+)"', text)
-
-                if photo_matches:
-                    cleaned = []
-                    for u in photo_matches:
-                        c = fix_media_url(u)
-                        if c and c not in cleaned and 's150x150' not in c and 's320x320' not in c:
-                            cleaned.append(c)
-                    if cleaned:
-                        return {
-                            "title": caption,
-                            "media_list": [{"download_url": u, "preview_url": u} for u in cleaned]
-                        }
-    except Exception:
-        pass
-
-    # 2. GraphQL Query with doc_id
-    try:
-        doc_url = f"https://www.instagram.com/graphql/query/?doc_id=8845758582119845&variables={json.dumps({'shortcode': shortcode})}"
-        r = requests.get(doc_url, headers=headers, timeout=8)
-        if r.status_code == 200:
-            data = r.json()
-            media = data.get('data', {}).get('xdt_shortcode_media') or data.get('data', {}).get('shortcode_media')
-            if media:
-                caption = "Instagram_Media"
-                edges = media.get('edge_media_to_caption', {}).get('edges', [])
-                if edges:
-                    caption = edges[0].get('node', {}).get('text', 'Instagram_Media').split('\n')[0][:50]
-
-                if media.get('is_video') and (mode in ['video', 'audio']):
-                    vid_url = fix_media_url(media.get('video_url'))
-                    thumb = fix_media_url(media.get('display_url'))
-                    if vid_url:
-                        return {"title": caption, "media_list": [{"download_url": vid_url, "preview_url": thumb}]}
-
-                sidecar = media.get('edge_sidecar_to_children', {}).get('edges', [])
-                if sidecar and len(sidecar) > 0 and mode == 'photo':
-                    media_list = []
-                    for child in sidecar:
-                        node = child.get('node', {})
-                        img_url = node.get('display_url') or (node.get('display_resources', [{}])[-1].get('src'))
-                        if img_url:
-                            c = fix_media_url(img_url)
-                            media_list.append({"download_url": c, "preview_url": c})
-                    if len(media_list) > 0:
-                        return {"title": caption, "media_list": media_list}
-                elif media.get('display_url') and mode == 'photo':
-                    c = fix_media_url(media['display_url'])
-                    return {"title": caption, "media_list": [{"download_url": c, "preview_url": c}]}
-    except Exception:
-        pass
-
-    return None
-
-@app.route('/download', methods=['POST'])
-def fetch_media():
-    data = request.get_json() or {}
-    url = data.get('url', '').strip()
-    mode = data.get('mode', 'video').strip().lower()
-
-    if not url or 'instagram.com' not in url:
-        return jsonify({"error": "Please provide a valid Instagram URL"}), 400
-
-    # 1. First attempt: Direct Extractor
-    direct_res = extract_instagram_all_media(url, mode=mode)
-    if direct_res and direct_res.get('media_list') and len(direct_res['media_list']) > 0:
-        return jsonify(direct_res)
-
-    # 2. Second attempt: yt-dlp Engine
+def get_media_ytdlp(url, mode='video'):
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
         'extract_flat': False,
-        'skip_download': True,
-        'ignoreerrors': True,
-        'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' if mode == 'video' else 'best',
     }
+    
+    if mode == 'audio':
+        ydl_opts['format'] = 'bestaudio/best'
 
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-            
-            if not info:
-                return jsonify({"error": "Could not fetch media. Please make sure the account is public."}), 404
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(url, download=False)
+        title = info.get('title', 'Instagram Media')
+        thumbnail = info.get('thumbnail')
+        media_url = None
 
-            title = info.get('title') or info.get('description') or 'Instagram_Media'
-            title = title.split('\n')[0][:50].strip()
-            media_list = []
+        if mode == 'audio':
+            if 'requested_formats' in info:
+                for f in info['requested_formats']:
+                    if f.get('acodec') != 'none' and f.get('vcodec') == 'none':
+                        media_url = f.get('url')
+                        break
+            if not media_url:
+                media_url = info.get('url')
+        else:
+            media_url = info.get('url')
+            if not media_url and 'formats' in info and len(info['formats']) > 0:
+                media_url = info['formats'][-1].get('url')
 
-            if 'entries' in info and info['entries']:
-                for entry in info['entries']:
-                    if not entry:
-                        continue
-                    dl_url = entry.get('url') or entry.get('thumbnail')
-                    thumb = entry.get('thumbnail') or dl_url
-                    if dl_url:
-                        media_list.append({"download_url": fix_media_url(dl_url), "preview_url": fix_media_url(thumb)})
-            else:
-                dl_url = info.get('url') or info.get('thumbnail')
-                thumb = info.get('thumbnail') or dl_url
-                if dl_url:
-                    media_list.append({"download_url": fix_media_url(dl_url), "preview_url": fix_media_url(thumb)})
+        if not media_url:
+            media_url = thumbnail
 
-            if not media_list:
-                return jsonify({"error": "No media stream found for this URL."}), 404
+        return [{
+            "preview_url": thumbnail or media_url,
+            "download_url": media_url,
+            "is_video": (mode == 'video')
+        }], title
 
+@app.route('/download', methods=['POST'])
+def get_media():
+    data = request.json or {}
+    url = data.get('url', '').strip()
+    mode = data.get('mode', 'video')
+
+    if not url:
+        return jsonify({"error": "Please provide a valid Instagram URL."}), 400
+
+    # 1. PHOTO MODE (Instaloader First)
+    if mode == 'photo':
+        media_list, caption = get_photos_via_instaloader(url)
+        if media_list:
             return jsonify({
-                "title": title,
-                "media_list": media_list
+                "title": caption[:60] if caption else "Instagram Photos",
+                "media_list": media_list,
+                "mode": "photo"
             })
 
-    except Exception:
-        return jsonify({"error": "Failed to fetch content. Make sure post is public and retry."}), 500
+    # 2. VIDEO / AUDIO MODE (yt-dlp)
+    if mode in ['video', 'audio']:
+        try:
+            media_list, title = get_media_ytdlp(url, mode)
+            if media_list and media_list[0]['download_url']:
+                return jsonify({
+                    "title": title or "Instagram Media",
+                    "media_list": media_list,
+                    "mode": mode
+                })
+        except Exception:
+            pass
 
+    # 3. UNIVERSAL FALLBACK (Instaloader)
+    media_list, caption = get_photos_via_instaloader(url)
+    if media_list:
+        return jsonify({
+            "title": caption[:60] if caption else f"Instagram {mode.capitalize()}",
+            "media_list": media_list,
+            "mode": mode
+        })
 
-@app.route('/proxy-image', methods=['GET'])
+    return jsonify({"error": "Unable to fetch media. Please make sure the account/post is PUBLIC."}), 500
+
+# Proxy Image Preview to prevent CORS broken icons
+@app.route('/proxy-image')
 def proxy_image():
     img_url = request.args.get('url')
     if not img_url:
         return "Missing URL", 400
     try:
-        clean_target = unquote(img_url)
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        }
-        res = requests.get(clean_target, headers=headers, stream=True, timeout=12)
-        resp = Response(res.content, content_type=res.headers.get('content-type', 'image/jpeg'))
-        resp.headers['Access-Control-Allow-Origin'] = '*'
-        resp.headers['Cache-Control'] = 'public, max-age=86400'
-        return resp
-    except Exception as e:
-        return str(e), 500
+        r = requests.get(img_url, headers=HEADERS, stream=True, timeout=10)
+        return Response(r.content, content_type=r.headers.get('content-type', 'image/jpeg'))
+    except Exception:
+        return "Image Load Failed", 500
 
-
-@app.route('/proxy-download', methods=['GET'])
+# Direct Download Proxy
+@app.route('/proxy-download')
 def proxy_download():
     media_url = request.args.get('url')
-    filename = request.args.get('filename', 'save1m_media.mp4')
+    filename = request.args.get('filename', 'media_file.mp4')
+    
     if not media_url:
         return "Missing URL", 400
 
-    try:
-        clean_target = unquote(media_url)
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-            'Accept': '*/*',
-        }
-        req = requests.get(clean_target, headers=headers, stream=True, timeout=30)
-        
-        if req.status_code != 200:
-            return f"CDN Error: {req.status_code}", 502
-
-        content_type = req.headers.get('content-type', 'application/octet-stream')
-        if filename.endswith('.jpg') or filename.endswith('.jpeg'):
-            content_type = 'image/jpeg'
-        elif filename.endswith('.mp4'):
-            content_type = 'video/mp4'
-        elif filename.endswith('.mp3'):
-            content_type = 'audio/mp4'
-
-        def generate_stream():
-            for chunk in req.iter_content(chunk_size=65536):
-                if chunk:
-                    yield chunk
-
-        response = Response(stream_with_context(generate_stream()), content_type=content_type)
-        response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
-        if 'content-length' in req.headers:
-            response.headers['Content-Length'] = req.headers['content-length']
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        return response
-    except Exception as e:
-        return str(e), 500
+    r = requests.get(media_url, headers=HEADERS, stream=True)
+    return Response(
+        r.iter_content(chunk_size=4096),
+        content_type=r.headers.get('content-type', 'application/octet-stream'),
+        headers={'Content-Disposition': f'attachment; filename="{filename}"'}
+    )
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(debug=True, port=5000)
