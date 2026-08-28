@@ -47,7 +47,7 @@ def clean_url(raw_url):
     return raw_url.replace('\\u0026', '&').replace('&amp;', '&').replace('\\/', '/')
 
 def extract_exact_carousel_photos(url):
-    """Extracts ONLY the exact photos inside the post (No suggested posts, no profile pictures)"""
+    """Extracts ONLY the exact images from the post without junk or suggestions"""
     shortcode = get_shortcode(url)
     clean_url_base = url.split('?')[0].rstrip('/')
     
@@ -58,7 +58,7 @@ def extract_exact_carousel_photos(url):
         'Referer': f'https://www.instagram.com/p/{shortcode}/' if shortcode else 'https://www.instagram.com/',
     }
 
-    # Method 1: GraphQL Shortcode Media Query (Guarantees exact children count)
+    # Method 1: GraphQL Query by doc_id (Exact Carousel Children)
     if shortcode:
         try:
             doc_url = f"https://www.instagram.com/graphql/query/?doc_id=8845758582119845&variables={json.dumps({'shortcode': shortcode})}"
@@ -72,7 +72,6 @@ def extract_exact_carousel_photos(url):
                     if edges:
                         caption = edges[0].get('node', {}).get('text', 'Instagram_Photo').split('\n')[0][:50]
 
-                    # Multi-image Carousel
                     sidecar = media.get('edge_sidecar_to_children', {}).get('edges', [])
                     if sidecar:
                         media_list = []
@@ -85,7 +84,6 @@ def extract_exact_carousel_photos(url):
                         if media_list:
                             return {"title": caption, "media_list": media_list}
                     else:
-                        # Single image
                         img_url = media.get('display_url') or (media.get('display_resources', [{}])[-1].get('src'))
                         if img_url:
                             c = clean_url(img_url)
@@ -93,7 +91,7 @@ def extract_exact_carousel_photos(url):
         except Exception:
             pass
 
-    # Method 2: Embed Page JSON Parser (Strict ShortcodeMedia object extraction)
+    # Method 2: Embed Page JSON Parser (Strict shortcode_media extraction)
     try:
         embed_url = f"{clean_url_base}/embed/captioned/"
         r = requests.get(embed_url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}, timeout=8)
@@ -106,7 +104,6 @@ def extract_exact_carousel_photos(url):
                 if clean_cap:
                     caption = clean_cap.split('\n')[0][:50]
 
-            # Parse exact shortcode_media JSON structure
             json_blobs = re.findall(r'(\{\"props\":.*?\"\}\}|\{\"context\":.*?\"\}\})', text)
             for blob in json_blobs:
                 try:
@@ -129,7 +126,6 @@ def extract_exact_carousel_photos(url):
                 except Exception:
                     continue
 
-            # Fallback to single primary image in embed
             img_match = re.search(r'class="EmbeddedMediaImage"[^>]*src="([^"]+)"', text)
             if img_match:
                 c = clean_url(img_match.group(1))
@@ -209,6 +205,25 @@ def fetch_media():
         return jsonify({"error": "Failed to fetch content. Please retry in a few moments."}), 500
 
 
+@app.route('/proxy-image', methods=['GET'])
+def proxy_image():
+    img_url = request.args.get('url')
+    if not img_url:
+        return "Missing URL", 400
+    try:
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'Referer': 'https://www.instagram.com/'
+        }
+        res = requests.get(img_url, headers=headers, stream=True, timeout=12)
+        resp = Response(res.content, content_type=res.headers.get('content-type', 'image/jpeg'))
+        resp.headers['Access-Control-Allow-Origin'] = '*'
+        resp.headers['Cache-Control'] = 'public, max-age=86400'
+        return resp
+    except Exception as e:
+        return str(e), 500
+
+
 @app.route('/proxy-download', methods=['GET'])
 def proxy_download():
     media_url = request.args.get('url')
@@ -236,6 +251,7 @@ def proxy_download():
             content_type=content_type
         )
         response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+        response.headers['Access-Control-Allow-Origin'] = '*'
         return response
     except Exception as e:
         return str(e), 500

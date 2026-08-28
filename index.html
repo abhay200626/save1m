@@ -326,7 +326,7 @@
 
     .image-wrapper {
       width: 100%;
-      min-height: 250px;
+      min-height: 280px;
       border-radius: 16px;
       overflow: hidden;
       background: #090d16;
@@ -807,7 +807,12 @@
             const initialQuality = (currentMode === 'video') ? '1080p' : '';
             const fileName = createCleanFilename(rawTitle, currentMode, countLabel, initialQuality);
             
-            const directImgUrl = item.preview_url || item.download_url;
+            const rawImageUrl = item.preview_url || item.download_url;
+            
+            // Fast proxy with fallback so image NEVER shows broken icon
+            const primaryProxyUrl = `https://save1m.onrender.com/proxy-image?url=${encodeURIComponent(rawImageUrl)}`;
+            const fallbackWeservUrl = `https://images.weserv.nl/?url=${encodeURIComponent(rawImageUrl)}&default=1`;
+
             const defaultDownloadUrl = `https://save1m.onrender.com/proxy-download?url=${encodeURIComponent(item.download_url)}&filename=${encodeURIComponent(fileName)}`;
 
             let qualityHtml = '';
@@ -829,10 +834,12 @@
               ? `Download PHOTO${countLabel}` 
               : `Download ${currentMode.toUpperCase()}${countLabel}`;
 
-            // Direct rendering with referrerpolicy="no-referrer" so images ALWAYS load instantly without 403
             card.innerHTML = `
               <div class="image-wrapper">
-                <img src="${directImgUrl}" referrerpolicy="no-referrer" alt="Media Preview" loading="lazy" />
+                <img src="${primaryProxyUrl}" 
+                     onerror="this.onerror=null; this.src='${fallbackWeservUrl}';" 
+                     alt="${rawTitle}" 
+                     loading="lazy" />
               </div>
               <div class="caption-text">${rawTitle}${countLabel}</div>
               ${qualityHtml}
