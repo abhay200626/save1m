@@ -54,26 +54,20 @@ def shortcode_to_media_id(shortcode):
     return media_id
 
 def extract_all_carousel_photos_complete(url):
-    """Extracts EVERY single photo in a carousel without missing any slide"""
     shortcode = get_shortcode(url)
     if not shortcode:
         return None
 
     clean_url_base = f"https://www.instagram.com/p/{shortcode}/"
-
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
         'x-ig-app-id': '936619743392459',
         'x-asbd-id': '129477',
-        'x-requested-with': 'XMLHttpRequest',
-        'Accept': '*/*',
         'Accept-Language': 'en-US,en;q=0.9',
         'Referer': clean_url_base,
-        'Sec-Fetch-Mode': 'cors',
-        'Sec-Fetch-Site': 'same-origin',
     }
 
-    # Method 1: Web Post Info Endpoint
+    # Method 1: Web Info GraphQL Endpoint
     try:
         api_url = f"https://www.instagram.com/api/v1/media/web_info_to_node/?shortcode={shortcode}"
         r = requests.get(api_url, headers=headers, timeout=8)
@@ -87,39 +81,35 @@ def extract_all_carousel_photos_complete(url):
                     caption = edges[0].get('node', {}).get('text', 'Instagram_Photo').split('\n')[0][:50]
 
                 sidecar = media.get('edge_sidecar_to_children', {}).get('edges', [])
-                if sidecar:
+                if sidecar and len(sidecar) > 0:
                     media_list = []
                     for child in sidecar:
                         node = child.get('node', {})
-                        img_url = node.get('display_url') or (node.get('display_resources', [{}])[-1].get('src'))
+                        img_url = node.get('display_url')
+                        if not img_url and node.get('display_resources'):
+                            img_url = node['display_resources'][-1].get('src')
                         if img_url:
                             c = clean_url(img_url)
                             media_list.append({"download_url": c, "preview_url": c})
-                    if media_list:
+                    if len(media_list) > 0:
                         return {"title": caption, "media_list": media_list}
-                else:
-                    img_url = media.get('display_url') or (media.get('display_resources', [{}])[-1].get('src'))
-                    if img_url:
-                        c = clean_url(img_url)
-                        return {"title": caption, "media_list": [{"download_url": c, "preview_url": c}]}
+                elif media.get('display_url'):
+                    c = clean_url(media['display_url'])
+                    return {"title": caption, "media_list": [{"download_url": c, "preview_url": c}]}
     except Exception:
         pass
 
-    # Method 2: GraphQL Query by doc_id
+    # Method 2: Direct GraphQL query hash with all children nodes
     try:
-        doc_url = f"https://www.instagram.com/graphql/query/?doc_id=8845758582119845&variables={json.dumps({'shortcode': shortcode})}"
+        doc_url = f"https://www.instagram.com/graphql/query/?query_hash=b3055c01b4b222b8a47dc12b090e4e64&variables={json.dumps({'shortcode': shortcode})}"
         r = requests.get(doc_url, headers=headers, timeout=8)
         if r.status_code == 200:
             data = r.json()
-            media = data.get('data', {}).get('xdt_shortcode_media') or data.get('data', {}).get('shortcode_media')
+            media = data.get('data', {}).get('shortcode_media')
             if media:
                 caption = "Instagram_Photo"
-                edges = media.get('edge_media_to_caption', {}).get('edges', [])
-                if edges:
-                    caption = edges[0].get('node', {}).get('text', 'Instagram_Photo').split('\n')[0][:50]
-
                 sidecar = media.get('edge_sidecar_to_children', {}).get('edges', [])
-                if sidecar:
+                if sidecar and len(sidecar) > 0:
                     media_list = []
                     for child in sidecar:
                         node = child.get('node', {})
@@ -127,52 +117,15 @@ def extract_all_carousel_photos_complete(url):
                         if img_url:
                             c = clean_url(img_url)
                             media_list.append({"download_url": c, "preview_url": c})
-                    if media_list:
+                    if len(media_list) > 0:
                         return {"title": caption, "media_list": media_list}
-                else:
-                    img_url = media.get('display_url') or (media.get('display_resources', [{}])[-1].get('src'))
-                    if img_url:
-                        c = clean_url(img_url)
-                        return {"title": caption, "media_list": [{"download_url": c, "preview_url": c}]}
+                elif media.get('display_url'):
+                    c = clean_url(media['display_url'])
+                    return {"title": caption, "media_list": [{"download_url": c, "preview_url": c}]}
     except Exception:
         pass
 
-    # Method 3: Mobile REST info endpoint via numerical media_id
-    try:
-        media_id = shortcode_to_media_id(shortcode)
-        mobile_headers = {
-            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 324.0.0.18.110',
-            'x-ig-app-id': '936619743392459',
-            'Accept-Language': 'en-US,en;q=0.9',
-        }
-        r = requests.get(f"https://i.instagram.com/api/v1/media/{media_id}/info/", headers=mobile_headers, timeout=8)
-        if r.status_code == 200:
-            data = r.json()
-            items = data.get('items', [])
-            if items:
-                item = items[0]
-                caption = "Instagram_Photo"
-                if item.get('caption') and item['caption'].get('text'):
-                    caption = item['caption']['text'].split('\n')[0][:50].strip()
-
-                if 'carousel_media' in item and len(item['carousel_media']) > 0:
-                    media_list = []
-                    for slide in item['carousel_media']:
-                        versions = slide.get('image_versions2', {}).get('candidates', [])
-                        if versions:
-                            c = clean_url(versions[0]['url'])
-                            media_list.append({"download_url": c, "preview_url": c})
-                    if media_list:
-                        return {"title": caption, "media_list": media_list}
-                elif 'image_versions2' in item:
-                    versions = item['image_versions2'].get('candidates', [])
-                    if versions:
-                        c = clean_url(versions[0]['url'])
-                        return {"title": caption, "media_list": [{"download_url": c, "preview_url": c}]}
-    except Exception:
-        pass
-
-    # Method 4: Embed Page Fallback (Single Image Fallback)
+    # Method 3: Embed Multi-Image Array Reader
     try:
         embed_url = f"https://www.instagram.com/p/{shortcode}/embed/captioned/"
         r = requests.get(embed_url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}, timeout=8)
@@ -185,6 +138,21 @@ def extract_all_carousel_photos_complete(url):
                 if clean_cap:
                     caption = clean_cap.split('\n')[0][:50]
 
+            # Deep search in embed JSON objects
+            all_sidecar_urls = re.findall(r'"display_url"\s*:\s*"([^"]+)"', text)
+            if all_sidecar_urls:
+                cleaned = []
+                for u in all_sidecar_urls:
+                    c = clean_url(u)
+                    if c and c not in cleaned and 's150x150' not in c and 's320x320' not in c:
+                        cleaned.append(c)
+                if cleaned:
+                    return {
+                        "title": caption,
+                        "media_list": [{"download_url": u, "preview_url": u} for u in cleaned]
+                    }
+
+            # Fallback to single primary image
             img_match = re.search(r'class="EmbeddedMediaImage"[^>]*src="([^"]+)"', text)
             if img_match:
                 c = clean_url(img_match.group(1))
@@ -203,7 +171,7 @@ def fetch_media():
     if not url or 'instagram.com' not in url:
         return jsonify({"error": "Please provide a valid Instagram URL"}), 400
 
-    # 1. Photo Mode Exact Handler
+    # 1. Photo Mode Direct Multi-Child Extraction
     if mode == 'photo':
         photo_res = extract_all_carousel_photos_complete(url)
         if photo_res and photo_res.get('media_list'):
