@@ -749,6 +749,12 @@
       color: #c4b5fd;
     }
 
+    .support-email-link {
+      color: #c4b5fd;
+      font-size: 0.8rem;
+      word-break: break-all;
+    }
+
     .footer-bottom {
       max-width: 1100px;
       margin: 30px auto 0;
@@ -806,7 +812,6 @@
       </div>
     </div>
 
-    <!-- 3 Core Navigation Tabs -->
     <nav class="nav-tabs">
       <button class="tab-btn active" onclick="switchTab('video', this)"><i data-lucide="video" size="16"></i> Video</button>
       <button class="tab-btn" onclick="switchTab('audio', this)"><i data-lucide="music" size="16"></i> Audio</button>
@@ -833,14 +838,11 @@
     <div class="spinner" id="loader"></div>
     <div id="errorText" class="error-msg"></div>
 
-    <!-- Multiple Photos Scroll Indicator -->
     <div id="multiNotice" class="multi-notice"></div>
 
-    <!-- Media Results Container -->
     <div class="results-grid" id="resultsGrid"></div>
   </main>
 
-  <!-- 1. Steps Section -->
   <section class="content-section">
     <h2 class="steps-title" id="stepsTitle">Steps to Download Reels From Instagram</h2>
     <p class="steps-desc">Here’s a quick and easy way to do it:</p>
@@ -851,7 +853,6 @@
     </div>
   </section>
 
-  <!-- 2. How Instagram Downloader Works Section -->
   <section class="content-section">
     <div class="showcase-card">
       <div class="showcase-text">
@@ -889,7 +890,6 @@
     </div>
   </section>
 
-  <!-- 3. Dual Feature Cards -->
   <section class="content-section">
     <div class="dual-cards-grid">
       <div class="info-card">
@@ -933,7 +933,6 @@
     </div>
   </section>
 
-  <!-- 4. Why Use Section -->
   <section class="content-section">
     <div class="why-banner">
       <h2>Why use Save1M?</h2>
@@ -944,7 +943,6 @@
     </div>
   </section>
 
-  <!-- 5. FAQ Section -->
   <section class="content-section">
     <h2 class="faq-title">Frequently Asked Questions</h2>
     <p class="faq-sub">Everything you need to know about Save1M</p>
@@ -1002,7 +1000,6 @@
     </div>
   </section>
 
-  <!-- 6. Footer -->
   <footer>
     <div class="footer-inner">
       <div class="footer-brand">
@@ -1037,17 +1034,15 @@
         </ul>
       </div>
 
-      <!-- Updated Support Section (Only Direct Contact) -->
       <div class="footer-col">
         <h5>SUPPORT</h5>
         <ul>
           <li><a href="mailto:abhaykumarverma1425@gmail.com"><i data-lucide="mail" size="14" style="vertical-align: middle; margin-right: 4px;"></i> Contact Us</a></li>
-          <li><a href="mailto:abhaykumarverma1425@gmail.com" style="color: #c4b5fd; font-size: 0.8rem; word-break: break-all;">abhaykumarverma1425@gmail.com</a></li>
+          <li><a href="mailto:abhaykumarverma1425@gmail.com" class="support-email-link">abhaykumarverma1425@gmail.com</a></li>
         </ul>
       </div>
     </div>
 
-    <!-- Footer Bottom & Engineered Credit -->
     <div class="footer-bottom">
       <p><strong>Save1M</strong> is not connected to Instagram™ or Meta. We do not host or store files on our servers; all content belongs to its original owners. Please do not use our tool for copyrighted or restricted content.</p>
       <div class="footer-copy">
@@ -1068,7 +1063,9 @@
     const errorText = document.getElementById('errorText');
     const multiNotice = document.getElementById('multiNotice');
 
-    // Custom Smooth Slow Scroll Function
+    // Live Render Server URL
+    const API_BASE = 'https://save1m.onrender.com';
+
     function smoothScrollTo(targetY, duration = 1800) {
       const startY = window.pageYOffset;
       const diff = targetY - startY;
@@ -1150,7 +1147,7 @@
       loader.style.display = 'block';
 
       try {
-        const response = await fetch('http://127.0.0.1:5000/download', {
+        const response = await fetch(`${API_BASE}/download`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url: url, mode: currentMode })
@@ -1176,10 +1173,10 @@
             const fileName = `save1m_${currentMode}_${index + 1}.${ext}`;
             
             const previewUrl = item.preview_url 
-              ? `http://127.0.0.1:5000/proxy-image?url=${encodeURIComponent(item.preview_url)}` 
+              ? `${API_BASE}/proxy-image?url=${encodeURIComponent(item.preview_url)}` 
               : 'https://via.placeholder.com/400x600?text=No+Preview';
 
-            const downloadUrl = `http://127.0.0.1:5000/proxy-download?url=${encodeURIComponent(item.download_url)}&filename=${fileName}`;
+            const downloadUrl = `${API_BASE}/proxy-download?url=${encodeURIComponent(item.download_url)}&filename=${fileName}`;
 
             card.innerHTML = `
               <img src="${previewUrl}" alt="Media Preview" onerror="this.src='https://via.placeholder.com/400x600?text=Preview+Unavailable'" />
@@ -1206,7 +1203,7 @@
         }
       } catch (err) {
         loader.style.display = 'none';
-        errorText.innerText = 'Server connection error. Make sure Flask backend is running on port 5000.';
+        errorText.innerText = 'Server is starting up (~25s on first load). Please tap Download again!';
       }
     }
   </script>

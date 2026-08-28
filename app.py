@@ -4,6 +4,7 @@ import instaloader
 import yt_dlp
 import requests
 import re
+import os
 
 app = Flask(__name__)
 CORS(app)
@@ -95,6 +96,10 @@ def get_media_ytdlp(url, mode='video'):
             "is_video": (mode == 'video')
         }], title
 
+@app.route('/', methods=['GET'])
+def home():
+    return jsonify({"status": "Save1M Engine Online"}), 200
+
 @app.route('/download', methods=['POST'])
 def get_media():
     data = request.json or {}
@@ -159,12 +164,16 @@ def proxy_download():
     if not media_url:
         return "Missing URL", 400
 
-    r = requests.get(media_url, headers=HEADERS, stream=True)
-    return Response(
-        r.iter_content(chunk_size=4096),
-        content_type=r.headers.get('content-type', 'application/octet-stream'),
-        headers={'Content-Disposition': f'attachment; filename="{filename}"'}
-    )
+    try:
+        r = requests.get(media_url, headers=HEADERS, stream=True, timeout=25)
+        return Response(
+            r.iter_content(chunk_size=65536),
+            content_type=r.headers.get('content-type', 'application/octet-stream'),
+            headers={'Content-Disposition': f'attachment; filename="{filename}"'}
+        )
+    except Exception as e:
+        return str(e), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
