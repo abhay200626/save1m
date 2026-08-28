@@ -68,16 +68,20 @@
       user-select: none;
     }
 
+    /* Panda Brand Box */
     .brand-icon {
-      width: 36px;
-      height: 36px;
+      width: 38px;
+      height: 38px;
       background: linear-gradient(135deg, #1e1b4b, #3b0764);
-      border: 1px solid rgba(236, 72, 153, 0.4);
-      border-radius: 10px;
+      border: 1px solid rgba(236, 72, 153, 0.45);
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 0 15px rgba(168, 85, 247, 0.3);
+      font-size: 1.35rem;
+      box-shadow: 0 0 16px rgba(168, 85, 247, 0.35);
+      line-height: 1;
+      user-select: none;
     }
 
     .brand-text { display: flex; flex-direction: column; line-height: 1; }
@@ -105,7 +109,6 @@
       margin-top: 3px;
     }
 
-    /* Visitor Counter Header Pill */
     .visitor-badge {
       display: inline-flex;
       align-items: center;
@@ -386,7 +389,6 @@
       display: none;
     }
 
-    /* Content Sections */
     .content-section {
       width: 100%;
       max-width: 1080px;
@@ -582,7 +584,8 @@
 
   <header>
     <div class="brand-logo" onclick="selectTab('video')">
-      <div class="brand-icon"><i data-lucide="zap" size="18" style="color: #f472b6;"></i></div>
+      <!-- Panda Logo Icon -->
+      <div class="brand-icon">🐼</div>
       <div class="brand-text">
         <div class="brand-title">SAVE<span class="highlight">1M</span></div>
         <div class="brand-tag">ULTRA HD ENGINE</div>
@@ -682,7 +685,7 @@
     <div class="footer-inner">
       <div class="footer-brand">
         <div class="brand-logo" onclick="selectTab('video')">
-          <div class="brand-icon"><i data-lucide="zap" size="16" style="color: #f472b6;"></i></div>
+          <div class="brand-icon">🐼</div>
           <div class="brand-text">
             <div class="brand-title" style="font-size: 1.15rem;">SAVE<span class="highlight">1M</span></div>
             <div class="brand-tag">ULTRA HD ENGINE</div>
@@ -732,7 +735,6 @@
     const multiNotice = document.getElementById('multiNotice');
     const visitorCountEl = document.getElementById('visitorCount');
 
-    // Visitor Counter Fetcher
     async function initVisitorCount() {
       try {
         const res = await fetch('https://api.counterapi.dev/v1/save1m_downloader_official/visits/up');
@@ -836,7 +838,6 @@
       }
     }
 
-    // Helper: Clean Caption / Title to Safe Filename
     function createCleanFilename(rawTitle, mode, countLabel, quality = '') {
       let base = (rawTitle || '').replace(/[^\w\s-]/gi, '').trim().replace(/\s+/g, '_');
       if (!base || base.toLowerCase() === 'instagram_media' || base.toLowerCase() === 'instagram') {
