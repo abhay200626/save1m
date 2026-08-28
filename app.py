@@ -36,49 +36,67 @@ def visitor_tracker():
     count = get_visitor_count()
     return jsonify({"count": count})
 
-def extract_instagram_direct(url):
-    """Direct fetcher for Instagram Photos and Carousels without yt-dlp error."""
-    clean_url = url.split('?')[0].rstrip('/')
-    api_url = f"{clean_url}/?__a=1&__d=dis"
+def extract_photo_fallback(url):
+    """Deep scraper for Instagram Photos/Carousels using multiple direct methods"""
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.5',
-        'Sec-Fetch-Dest': 'document',
-        'Sec-Fetch-Mode': 'navigate',
-        'Sec-Fetch-Site': 'none'
     }
-    
+
+    clean_url = url.split('?')[0].rstrip('/')
+
+    # Method 1: Embed Page Scrape (Bypasses Instagram Login Wall for Photos)
     try:
-        r = requests.get(api_url, headers=headers, timeout=10)
+        embed_url = f"{clean_url}/embed/captioned/"
+        r = requests.get(embed_url, headers=headers, timeout=8)
         if r.status_code == 200:
-            data = r.json()
-            items = data.get('items', [])
-            if items:
-                item = items[0]
-                caption = "Instagram_Photo"
-                if item.get('caption') and item['caption'].get('text'):
-                    caption = item['caption']['text'].split('\n')[0][:50].strip()
+            html = r.text
+            # Find embedded images
+            img_matches = re.findall(r'class="EmbeddedMediaImage"[^>]*src="([^"]+)"', html)
+            if not img_matches:
+                img_matches = re.findall(r'<img[^>]+src="([^"]+)"', html)
 
-                media_list = []
-                # Carousel
-                if 'carousel_media' in item:
-                    for media in item['carousel_media']:
-                        img_versions = media.get('image_versions2', {}).get('candidates', [])
-                        if img_versions:
-                            best_img = img_versions[0]['url']
-                            media_list.append({"download_url": best_img, "preview_url": best_img})
-                # Single Image
-                elif 'image_versions2' in item:
-                    img_versions = item['image_versions2'].get('candidates', [])
-                    if img_versions:
-                        best_img = img_versions[0]['url']
-                        media_list.append({"download_url": best_img, "preview_url": best_img})
+            # Filter valid instagram cdn links
+            valid_imgs = [img.replace('&amp;', '&') for img in img_matches if 'cdninstagram.com' in img or 'fbcdn.net' in img]
+            
+            # Extract caption
+            caption = "Instagram_Photo"
+            caption_match = re.search(r'<div class="Caption"[^>]*>(.*?)</div>', html, re.DOTALL)
+            if caption_match:
+                clean_caption = re.sub('<[^<]+?>', '', caption_match.group(1)).strip()
+                if clean_caption:
+                    caption = clean_caption.split('\n')[0][:50]
 
-                if media_list:
-                    return {"title": caption, "media_list": media_list}
+            if valid_imgs:
+                # Remove duplicates while preserving order
+                unique_imgs = list(dict.fromkeys(valid_imgs))
+                media_list = [{"download_url": img, "preview_url": img} for img in unique_imgs]
+                return {"title": caption, "media_list": media_list}
     except Exception:
         pass
+
+    # Method 2: OpenGraph Meta Tags
+    try:
+        r = requests.get(clean_url, headers=headers, timeout=8)
+        if r.status_code == 200:
+            html = r.text
+            og_image = re.search(r'<meta property="og:image" content="([^"]+)"', html)
+            og_title = re.search(r'<meta property="og:title" content="([^"]+)"', html)
+            
+            caption = "Instagram_Photo"
+            if og_title:
+                caption = og_title.group(1).split(':')[0][:50]
+
+            if og_image:
+                img_url = og_image.group(1).replace('&amp;', '&')
+                return {
+                    "title": caption,
+                    "media_list": [{"download_url": img_url, "preview_url": img_url}]
+                }
+    except Exception:
+        pass
+
     return None
 
 @app.route('/download', methods=['POST'])
@@ -90,78 +108,55 @@ def fetch_media():
     if not url or 'instagram.com' not in url:
         return jsonify({"error": "Please provide a valid Instagram URL"}), 400
 
-    # 1. For photos, try direct extraction first
+    # If mode is photo, run dedicated photo scraper first
     if mode == 'photo':
-        direct_data = extract_instagram_direct(url)
-        if direct_data and direct_data.get('media_list'):
-            return jsonify(direct_data)
+        photo_res = extract_photo_fallback(url)
+        if photo_res and photo_res.get('media_list'):
+            return jsonify(photo_res)
 
-    # 2. Extract with yt-dlp fallback (for Reels, Videos, Audio)
+    # For Video / Reels / Audio, use yt-dlp
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
         'extract_flat': False,
         'skip_download': True,
         'ignoreerrors': True,
-        'check_formats': False
     }
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
             
-            # If yt-dlp fails or finds nothing, try direct extractor
             if not info:
-                direct_data = extract_instagram_direct(url)
-                if direct_data and direct_data.get('media_list'):
-                    return jsonify(direct_data)
-                return jsonify({"error": "Could not extract media. Ensure post is from a public account."}), 404
+                # Fallback to photo parser if yt-dlp returns nothing
+                photo_res = extract_photo_fallback(url)
+                if photo_res and photo_res.get('media_list'):
+                    return jsonify(photo_res)
+                return jsonify({"error": "Unable to fetch content. Make sure the Instagram account is public."}), 404
 
             title = info.get('title') or info.get('description') or 'Instagram_Media'
             title = title.split('\n')[0][:50].strip()
-
             media_list = []
 
-            # Carousel entries
             if 'entries' in info and info['entries']:
                 for entry in info['entries']:
                     if not entry:
                         continue
-                    if mode == 'photo':
-                        dl_url = entry.get('thumbnail') or entry.get('url')
-                    else:
-                        dl_url = entry.get('url') or entry.get('thumbnail')
-                    
+                    dl_url = entry.get('url') or entry.get('thumbnail')
                     thumb = entry.get('thumbnail') or dl_url
                     if dl_url:
-                        media_list.append({
-                            "download_url": dl_url,
-                            "preview_url": thumb
-                        })
+                        media_list.append({"download_url": dl_url, "preview_url": thumb})
             else:
-                if mode == 'photo':
-                    thumbnails = info.get('thumbnails', [])
-                    if thumbnails:
-                        dl_url = thumbnails[-1].get('url') or info.get('thumbnail') or info.get('url')
-                    else:
-                        dl_url = info.get('thumbnail') or info.get('url')
-                    thumb = dl_url
-                else:
-                    dl_url = info.get('url') or info.get('thumbnail')
-                    thumb = info.get('thumbnail') or dl_url
-
+                dl_url = info.get('url') or info.get('thumbnail')
+                thumb = info.get('thumbnail') or dl_url
                 if dl_url:
-                    media_list.append({
-                        "download_url": dl_url,
-                        "preview_url": thumb
-                    })
+                    media_list.append({"download_url": dl_url, "preview_url": thumb})
 
             if not media_list:
-                # Final fallback check
-                direct_data = extract_instagram_direct(url)
-                if direct_data and direct_data.get('media_list'):
-                    return jsonify(direct_data)
-                return jsonify({"error": "No media stream available for this URL."}), 404
+                photo_res = extract_photo_fallback(url)
+                if photo_res and photo_res.get('media_list'):
+                    return jsonify(photo_res)
+                return jsonify({"error": "No media stream available for this post."}), 404
 
             return jsonify({
                 "title": title,
@@ -169,11 +164,10 @@ def fetch_media():
             })
 
     except Exception as e:
-        # Fallback to direct fetcher on yt-dlp crash
-        direct_data = extract_instagram_direct(url)
-        if direct_data and direct_data.get('media_list'):
-            return jsonify(direct_data)
-        return jsonify({"error": f"Failed to fetch content: {str(e)}"}), 500
+        photo_res = extract_photo_fallback(url)
+        if photo_res and photo_res.get('media_list'):
+            return jsonify(photo_res)
+        return jsonify({"error": "Failed to fetch content. Server is updating, please retry in 10s."}), 500
 
 
 @app.route('/proxy-image', methods=['GET'])
@@ -183,10 +177,10 @@ def proxy_image():
         return "Missing URL", 400
     try:
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
             'Referer': 'https://www.instagram.com/'
         }
-        res = requests.get(img_url, headers=headers, stream=True, timeout=15)
+        res = requests.get(img_url, headers=headers, stream=True, timeout=12)
         return Response(res.content, content_type=res.headers.get('content-type', 'image/jpeg'))
     except Exception as e:
         return str(e), 500
@@ -201,7 +195,7 @@ def proxy_download():
 
     try:
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
             'Referer': 'https://www.instagram.com/'
         }
         req = requests.get(media_url, headers=headers, stream=True, timeout=25)
